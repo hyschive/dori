@@ -1,0 +1,268 @@
+
+                                **********
+                                *        *
+                                *  Dori  *
+                                *        *
+                                **********
+
+The name of the program is in memory of the beauty of the Kealakekua Bay in
+Hawaii in the Fall of 2007
+==============================================================================
+
+
+===================
+|| Version 2.6.2 ||
+===================
+
+-----------
+| Feature |
+-----------
+1. Add headers in the files "Record__TimeStep" and "Record__Dump".
+2. The format of the file "Record__Energy" is modified.
+3. Allow the size of the initial condition file to be larger than what is
+   expected (TOTAL_N*7*4 bytes).
+
+
+-------------
+| Bug Fixed |
+-------------
+1. Fix the bug in the function "Get_NewTimeStep", in which the time-step
+   estimation may be incorrect when either "ENERGY_DT < 2^MAX_DT_POW"
+   or "OUTPUT_DT < 2^MAX_DT_POW".
+2. Replace all "MPI_INTEGER" by "MPI_INT".
+
+
+
+
+USER GUIDE
+==============================================================================
+
+-----------
+| Feature |
+-----------
+1. GPU-accelerated direct N-body program (also work in CPU-only systems)
+2. Support both the block individual time-step and the shared time-step schemes
+3. Parallel (support multiple CPUs/GPUs)
+
+To run the program, there are basically 4 steps:
+1. Properly set all options and parameters in the Makefile; compile the program
+   by typing "make"
+2. Properly set all parameters in the file "Input__Parameter"
+3. Provide the initial condition file, which must be named "INIT_CONDITION"
+4. Run the program by the command "mpirun -np NGPU ./Swim" for using
+   "NGPU" GPUs.
+
+In the following, a detailed description is given for each of these steps.
+
+
+
+--------------
+| I. Compile |
+--------------
+1. Remove all object files and executable by the command
+
+         make clean
+
+2. Set the simulation options. Currently there are 8 options in the Makefile.
+
+*** To turn on/off an option in the Makefile, you should remove/add the comment
+    symbol "#" in the beginning of the line.
+    For example,
+    Turn on  the option "GPU" -->   SIMU_OPTION += -DGPU
+    Turn off the option "GPU" -->  #SIMU_OPTION += -DGPU
+
+*** Every time you modify an option or a parameter in the Makefile, you must
+    re-compile the entire program by the following procedure.
+
+         make clean
+         make
+
+   Options in the Makefile:
+   (1) GPU :
+       Enable the GPU acceleration. If this option is turned off, the program
+       will use CPUs only, and the CUDA libraries will not be included during
+       the compilation. This option is provided for comparing the performance
+       between CPU and GPU.
+
+   (2) SOFTEN :
+       Add the soften length in the gravitational acceleration, jerk, and
+       potential calculation.
+       --> r^2 = dx^2 + dy^2 + dz^2 + soften^2
+
+*** Currently the program MUST work with the soften length. Therefore, this
+    option must be turned on.
+
+   (3) IMPLICIT_HERMITE :
+       Use the implicit Hermite scheme to advance the particle position and
+       velocity.
+
+   (4) N_IS_MULTIPLE_OF_BS :
+       You can turn on this option if the number of particles per MPI process
+       is a multiple of BLOCK_SIZE. In this case, the performance can be
+       further optimized.
+
+   (5) HYBRID_SCHEME :
+       Use the HYBRID scheme (Harfst et al. 2007, NewA, 12, 357) for the
+       parallelization. Otherwise, the RING parallelization scheme is adopted.
+
+*** Currently, the RING scheme is recommended.
+
+   (6) FLOAT8_ACC :
+       Declare the accumulation arrays for computing the acceleration, jerk,
+       and potential as double precision.
+
+   (7) FLOAT8 :
+       Declare all floating-point variables as double precision (must turn
+       on FLOAT8_ACC as well).
+
+*** All other variables will still be single-precision.
+
+   (8) SHARED_TIMESTEP :
+       Use the shared time-step scheme, in which all particles will have the
+       same time-step. Otherwise, the "block individual time-step" is adopted,
+       in which different particles can have different time-steps
+       (restricted to be the power of two).
+
+   (9) FERMI :
+       Enable the performance optimization in Fermi GPUs. You should always
+       turn on this option if you are using the Fermi GPUs. Running program
+       with this option on using GPUs incompatible to the Fermi architecture
+       will result in a run-time error.
+
+
+3. Set up the simulation parameters related to the GPU implementation.
+   (1) BLOCK_SIZE :
+       The size of the CUDA thread block. To achieve better performance, this
+       number should be a multiple of the size of the CUDA warp (typically 32).
+       Typically, we set BLOCK_SIZE = 128.
+
+   (2) GRID_SIZE :
+       The size of the CUDA thread grid. To achieve better performance, this
+       number should be a multiple of the number of multiprocessors in the
+       adopted GPU. For example, the NVIDIA GTX 480 has 15 multiprocessors.
+       Therefore, we can set GRID_SIZE = 60.
+
+*** The number of multiprocessors in your GPU can be queried by using the
+    CUDA SDK "deviceQuery".
+
+
+4. Set the PATH of all libraries. Currently Dori requires 3 packages,
+   and each of which has a corresponding path variable:
+   (1) CUDA Toolkit --> CUDA_TOOLKIT_PATH
+   (2) CUDA SDK     --> CUDA_SDK_PATH
+   (3) MPI          --> MPI_PATH
+
+
+5. Set up the compilation flags.
+   (1) CXXWARN_FLAG
+   (2) CXXFLAG
+   (3) NVCCFLAG
+
+*** For example, to use the GNU C++ compiler, you can
+   (1) Comment the line "LIB := -limf"
+   (2) Comment the line "CXXWARN_FLAG := -w1"
+   (3) Set "CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) -O3"
+
+
+6. Compile the program by the command
+
+         make
+
+   An executable named "Swim" will be generated and copied to the directory
+   "Run". All object files will be put in the directory "Object".
+
+
+
+----------------------
+| II. Parameter File |
+----------------------
+To run the program, the parameter file "Input__Parameter" must be properly set
+and placed in the same directory as the executable "Swim". Please refer to the
+file "Input__Parameter" for a brief description of all parameters.
+Below are some additional description of the parameter setting.
+
+1. TOTAL_N        : The total number of particles in the simulations
+   NGPU           : The number of GPUs (= the number of MPI processes)
+                    (The number of particles per GPU will be N = TOTAL_N/NGPU)
+
+2. ETA            : Factor proportional to the size of the time-step
+                    "during the simulation"
+   INIT_ETA       : Factor proportional to the size of the time-step
+                    "in the first step"
+
+3. RESTART        : Use any of the previous data dumps as the initial condition
+                    to restart the simulation. To restart a simulation run
+                    properly, you can make a symbolic link to a previous dump.
+                    For example:
+
+                    ln -fs Data_XXXXXX INIT_CONDITION
+
+                    You should also provide the following parameters:
+                    "INIT_T", "INIT_STEP", "INIT_DUMP_ID", and "INIT_E".
+
+4. SPLIT_NMAX     : Useful only for the GPU optimization. Typically we set
+                    SPLIT_NMAX = 2048.
+
+5. GPUID_SELECT   : GPU ID selection mode:
+                    -2   -> set GPU ID automatically by CUDA (must work with
+                            the "compute-exclusive mode")
+                    -1   -> set by MPI ranks : GPU_ID = MPI_Rank%NGPU_PER_NODE
+                    >= 0 -> set by input : GPU_ID = GPUID_SELECT
+
+*** You can put your simulation note in the file "Input__NoteScript". The
+    content in this file will be copied to the file "Record__Note" during the
+    simulation initialization.
+
+
+
+-------------------------------
+| III. Initial Condition File |
+-------------------------------
+To run the program, an initial condition file must be provided. This file
+should always be named "INIT_CONDITION" and be placed in the same directory as
+the executable "Swim". One straightforward way to set up the targeted initial
+condition is to make a symbolic link to the particle data file as following :
+
+      ln -fs ParticleDataFile(or any previous data dump) INIT_CONDITION
+
+The data format of the initial condition file (and also for any data dump) is
+ordered as follows (in binary form).
+
+M(1)       X(1)       Y(1)       Z(1)      Vx(1)        Vy(1)       Vz(1)
+M(2)       X(2)       Y(2)       Z(2)      Vx(2)        Vy(2)       Vz(2)
+      ...
+      ...
+      ...
+M(TOTAL_N) X(TOTAL_N) Y(TOTAL_N) Z(TOTAL_N) Vx(TOTAL_N) Vy(TOTAL_N) Vz(TOTAL_N)
+
+where M = Mass, (X,Y,Z) = 3-D position, (Vx,Vy,Vz) = 3-D velocity, and the
+numbers in the parentheses indicate the particle indices.
+
+
+
+----------------------
+| IV. Make Dori swim |
+----------------------
+There are 4 files required for making Dori swim:
+   (1) Executable          -->   "Swim"
+   (2) Parameter file      -->   "Input__Parameter"
+   (3) Note file           -->   "Input__NoteScript"
+   (4) Initial condition   -->   "INIT_CONDITION"
+
+These 4 files must be put in the same directory (the default directory is
+"Run"). To run the program, you can use the command
+
+         mpirun -np NGPU ./Swim
+
+where NGPU is the number of MPI processes you want to use. For example, in a
+single GPU system, you can type
+
+         mpirun -np 1 ./Swim
+
+*** The "NGPU" input in the command "mpirun -np NGPU" must be equal to the
+parameter "NGPU" in the parameter file.
+
+
+
+
+
