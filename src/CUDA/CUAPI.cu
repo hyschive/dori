@@ -1,4 +1,5 @@
 #include "Dori.h"
+#include "CUAPI.h"
 
 __global__ void CUCAL_Acc_Jerk( const int Nj, real gJ_Mass[], real gJ_Pos[][3], real gJ_Vel[][3],
                                 const int Ni, real gI_Pos[][3], real gI_Vel[][3],
@@ -67,7 +68,7 @@ void CUAPI_SetDevice( const int Mode )
 
 // verify that there are GPU supporing CUDA
    int DeviceCount;
-   CUDA_SAFE_CALL(  cudaGetDeviceCount( &DeviceCount )  );
+   CUDA_CHECK_ERROR(  cudaGetDeviceCount( &DeviceCount )  );
 
    if ( DeviceCount == 0 )
    {
@@ -85,12 +86,12 @@ void CUAPI_SetDevice( const int Mode )
    switch ( Mode )
    {
       case -2:
-         CUDA_SAFE_CALL(  cudaMalloc( (void**) &d_TempPtr, sizeof(int) )  );  // to set the GPU ID
-         CUDA_SAFE_CALL(  cudaFree( d_TempPtr )  );
+         CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_TempPtr, sizeof(int) )  );  // to set the GPU ID
+         CUDA_CHECK_ERROR(  cudaFree( d_TempPtr )  );
 
 //       make sure that the "exclusive" compute mode is adopted
-         CUDA_SAFE_CALL(  cudaGetDevice( &GetDeviceID )  );
-         CUDA_SAFE_CALL(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
+         CUDA_CHECK_ERROR(  cudaGetDevice( &GetDeviceID )  );
+         CUDA_CHECK_ERROR(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
 
          if ( DeviceProp.computeMode != cudaComputeModeExclusive )
          {
@@ -102,7 +103,7 @@ void CUAPI_SetDevice( const int Mode )
 
       case -1:
          SetDeviceID = MyRank % DeviceCount;
-         CUDA_SAFE_CALL(  cudaSetDevice( SetDeviceID )  );
+         CUDA_CHECK_ERROR(  cudaSetDevice( SetDeviceID )  );
 
          if ( NGPU > 1  &&  MyRank == 0 )
          {
@@ -116,7 +117,7 @@ void CUAPI_SetDevice( const int Mode )
 
          if ( SetDeviceID < DeviceCount )
          {
-            CUDA_SAFE_CALL(  cudaSetDevice( SetDeviceID )  );
+            CUDA_CHECK_ERROR(  cudaSetDevice( SetDeviceID )  );
          }
 
          else
@@ -139,8 +140,8 @@ void CUAPI_SetDevice( const int Mode )
 
 // check
    GetDeviceID = -999;
-   CUDA_SAFE_CALL(  cudaGetDevice( &GetDeviceID )  );
-   CUDA_SAFE_CALL(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
+   CUDA_CHECK_ERROR(  cudaGetDevice( &GetDeviceID )  );
+   CUDA_CHECK_ERROR(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
 
 // check
 // (1) verify the device version
@@ -161,8 +162,8 @@ void CUAPI_SetDevice( const int Mode )
    }
 
 // (3) verify that the adopted ID is accessible
-   CUDA_SAFE_CALL(  cudaMalloc( (void**) &d_TempPtr, sizeof(int) )  );
-   CUDA_SAFE_CALL(  cudaFree( d_TempPtr )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_TempPtr, sizeof(int) )  );
+   CUDA_CHECK_ERROR(  cudaFree( d_TempPtr )  );
 
 // (4) verify the capability of double precision
 #  ifdef FLOAT8_ACC
@@ -259,7 +260,7 @@ void CUAPI_DiagnoseDevice()
 
 // get the number of devices
    int DeviceCount;
-   CUDA_SAFE_CALL(  cudaGetDeviceCount( &DeviceCount )  );
+   CUDA_CHECK_ERROR(  cudaGetDeviceCount( &DeviceCount )  );
 
    if ( DeviceCount == 0 )
    {
@@ -271,12 +272,12 @@ void CUAPI_DiagnoseDevice()
 
 // get the device ID
    int GetDeviceID = 999;
-   CUDA_SAFE_CALL(  cudaGetDevice( &GetDeviceID )  );
+   CUDA_CHECK_ERROR(  cudaGetDevice( &GetDeviceID )  );
 
 
 // load the device properties
    cudaDeviceProp DeviceProp;
-   CUDA_SAFE_CALL(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
+   CUDA_CHECK_ERROR(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
 
 
 // record the device properties
@@ -295,8 +296,8 @@ void CUAPI_DiagnoseDevice()
       if ( MyRank == YourTurn )
       {
          int DriverVersion = 0, RuntimeVersion = 0;
-         CUDA_SAFE_CALL(  cudaDriverGetVersion( &DriverVersion )  );
-         CUDA_SAFE_CALL(  cudaRuntimeGetVersion( &RuntimeVersion )  );
+         CUDA_CHECK_ERROR(  cudaDriverGetVersion( &DriverVersion )  );
+         CUDA_CHECK_ERROR(  cudaRuntimeGetVersion( &RuntimeVersion )  );
 
          FILE *Note = fopen( FileName, "a" );
          fprintf( Note, "MPI rank = %3d, hostname = %10s, PID = %5d\n\n", MyRank, Host, PID );
@@ -373,21 +374,23 @@ void CUAPI_Pot( const int Nj, const real hJ_Mass[], const real hJ_Pos[][3],
 
 // copy data from host to device
 //=========================================================================================
-   CUDA_SAFE_CALL( cudaMemcpy( dJ_Mass, hJ_Mass,  J_Mem_Size, cudaMemcpyHostToDevice ) );
-   CUDA_SAFE_CALL( cudaMemcpy( dJ_Pos,  hJ_Pos, 3*J_Mem_Size, cudaMemcpyHostToDevice ) );
+   CUDA_CHECK_ERROR( cudaMemcpy( dJ_Mass, hJ_Mass,  J_Mem_Size, cudaMemcpyHostToDevice ) );
+   CUDA_CHECK_ERROR( cudaMemcpy( dJ_Pos,  hJ_Pos, 3*J_Mem_Size, cudaMemcpyHostToDevice ) );
 
-   CUDA_SAFE_CALL( cudaMemcpy( dI_Pos,  hI_Pos, 3*I_Mem_Size, cudaMemcpyHostToDevice ) );
+   CUDA_CHECK_ERROR( cudaMemcpy( dI_Pos,  hI_Pos, 3*I_Mem_Size, cudaMemcpyHostToDevice ) );
 
 
 // execute the kernel to get potential
 //=========================================================================================
    CUCAL_Pot <<< Grid_Dim, Block_Dim >>> ( Nj, dJ_Mass, dJ_Pos, Ni, dI_Pos, dI_Pot, Eps2 );
-   CUT_CHECK_ERROR( "Kernel execution failed" );
+
+   CUDA_CHECK_ERROR( cudaGetLastError() );
+
 
 
 // copy data from device to host
 //=========================================================================================
-   CUDA_SAFE_CALL( cudaMemcpy( hI_Pot, dI_Pot, I_Mem_Size, cudaMemcpyDeviceToHost ) );
+   CUDA_CHECK_ERROR( cudaMemcpy( hI_Pot, dI_Pot, I_Mem_Size, cudaMemcpyDeviceToHost ) );
 
 
 // multiply results by the gravitational constant if it's not unity
@@ -453,15 +456,15 @@ void CUAPI_Acc_Jerk( const int Nj, const real hJ_Mass[], const real hJ_Pos[][3],
 //=========================================================================================
    if ( Copy_J_MassPosVel )
    {
-      CUDA_SAFE_CALL( cudaMemcpy( dJ_Mass, hJ_Mass,  J_Mem_Size, cudaMemcpyHostToDevice ) );
-      CUDA_SAFE_CALL( cudaMemcpy( dJ_Pos,  hJ_Pos, 3*J_Mem_Size, cudaMemcpyHostToDevice ) );
-      CUDA_SAFE_CALL( cudaMemcpy( dJ_Vel,  hJ_Vel, 3*J_Mem_Size, cudaMemcpyHostToDevice ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( dJ_Mass, hJ_Mass,  J_Mem_Size, cudaMemcpyHostToDevice ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( dJ_Pos,  hJ_Pos, 3*J_Mem_Size, cudaMemcpyHostToDevice ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( dJ_Vel,  hJ_Vel, 3*J_Mem_Size, cudaMemcpyHostToDevice ) );
    }
 
-      CUDA_SAFE_CALL( cudaMemcpy( dI_Pos,  hI_Pos, 3*I_Mem_Size, cudaMemcpyHostToDevice ) );
-      CUDA_SAFE_CALL( cudaMemcpy( dI_Vel,  hI_Vel, 3*I_Mem_Size, cudaMemcpyHostToDevice ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( dI_Pos,  hI_Pos, 3*I_Mem_Size, cudaMemcpyHostToDevice ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( dI_Vel,  hI_Vel, 3*I_Mem_Size, cudaMemcpyHostToDevice ) );
 
-      CUDA_SAFE_CALL( cudaMemcpy( d_Nj_afterSplit_List, h_Nj_afterSplit_List, 32*sizeof(int),
+      CUDA_CHECK_ERROR( cudaMemcpy( d_Nj_afterSplit_List, h_Nj_afterSplit_List, 32*sizeof(int),
                                   cudaMemcpyHostToDevice ) );
 
 
@@ -479,20 +482,21 @@ void CUAPI_Acc_Jerk( const int Nj, const real hJ_Mass[], const real hJ_Pos[][3],
                                                          NSplit, NBlock_perSeg, Ni_perSeg, Ni_allSeg,
                                                          d_Nj_afterSplit_List );
    }
-   CUT_CHECK_ERROR( "Kernel execution failed" );
+
+   CUDA_CHECK_ERROR( cudaGetLastError() );
 
 
 // copy data from device to host
 //=========================================================================================
    if ( NSplit == 1 )
    {
-      CUDA_SAFE_CALL( cudaMemcpy( hI_Acc,  dI_Acc,  Out_Mem_Size, cudaMemcpyDeviceToHost ) );
-      CUDA_SAFE_CALL( cudaMemcpy( hI_Jerk, dI_Jerk, Out_Mem_Size, cudaMemcpyDeviceToHost ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( hI_Acc,  dI_Acc,  Out_Mem_Size, cudaMemcpyDeviceToHost ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( hI_Jerk, dI_Jerk, Out_Mem_Size, cudaMemcpyDeviceToHost ) );
    }
    else
    {
-      CUDA_SAFE_CALL( cudaMemcpy( hI_Acc_Split,  dI_Acc,  Out_Mem_Size, cudaMemcpyDeviceToHost ) );
-      CUDA_SAFE_CALL( cudaMemcpy( hI_Jerk_Split, dI_Jerk, Out_Mem_Size, cudaMemcpyDeviceToHost ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( hI_Acc_Split,  dI_Acc,  Out_Mem_Size, cudaMemcpyDeviceToHost ) );
+      CUDA_CHECK_ERROR( cudaMemcpy( hI_Jerk_Split, dI_Jerk, Out_Mem_Size, cudaMemcpyDeviceToHost ) );
 
       for (int i=0; i<Ni; i++)
       {
@@ -558,32 +562,32 @@ void CUAPI_MemAllocate()
 
 
 // allocate the device memory
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dJ_Mass,   J_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dJ_Pos,  3*J_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dJ_Vel,  3*J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dJ_Mass,   J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dJ_Pos,  3*J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dJ_Vel,  3*J_Mem_Size ) );
 
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dI_Pos,  3*I_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dI_Vel,  3*I_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dI_Acc,  Out_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dI_Jerk, Out_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dI_Pos,  3*I_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dI_Vel,  3*I_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dI_Acc,  Out_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dI_Jerk, Out_Mem_Size ) );
 
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &dI_Pot,    J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &dI_Pot,    J_Mem_Size ) );
 
-   CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Nj_afterSplit_List, 32*sizeof(int) ) );
+   CUDA_CHECK_ERROR( cudaMalloc( (void**) &d_Nj_afterSplit_List, 32*sizeof(int) ) );
 
 
 // allocate the host memory by CUDA
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Mass,            J_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Pos_Pred,      3*J_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Vel_Pred,      3*J_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Pos_LineUp,    3*I_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Vel_LineUp,    3*I_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Acc_local,     3*I_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &Jerk_local,    3*I_Mem_Size ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &hI_Acc_Split,  3*Max_Pseudo_N*sizeof(real) ) );
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &hI_Jerk_Split, 3*Max_Pseudo_N*sizeof(real) ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Mass,            J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Pos_Pred,      3*J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Vel_Pred,      3*J_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Pos_LineUp,    3*I_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Vel_LineUp,    3*I_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Acc_local,     3*I_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &Jerk_local,    3*I_Mem_Size ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &hI_Acc_Split,  3*Max_Pseudo_N*sizeof(real) ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &hI_Jerk_Split, 3*Max_Pseudo_N*sizeof(real) ) );
 
-   CUDA_SAFE_CALL( cudaMallocHost( (void**) &h_Nj_afterSplit_List, 32*sizeof(int) ) );
+   CUDA_CHECK_ERROR( cudaMallocHost( (void**) &h_Nj_afterSplit_List, 32*sizeof(int) ) );
 
 
    if ( MyRank == 0 )    fprintf( stdout, "done\n" );
@@ -603,15 +607,15 @@ void CUAPI_MemFree()
 
 
 // free the device memory
-   if ( dJ_Mass               != NULL )   CUDA_SAFE_CALL(  cudaFree( dJ_Mass              )  );
-   if ( dJ_Pos                != NULL )   CUDA_SAFE_CALL(  cudaFree( dJ_Pos               )  );
-   if ( dJ_Vel                != NULL )   CUDA_SAFE_CALL(  cudaFree( dJ_Vel               )  );
-   if ( dI_Pos                != NULL )   CUDA_SAFE_CALL(  cudaFree( dI_Pos               )  );
-   if ( dI_Vel                != NULL )   CUDA_SAFE_CALL(  cudaFree( dI_Vel               )  );
-   if ( dI_Acc                != NULL )   CUDA_SAFE_CALL(  cudaFree( dI_Acc               )  );
-   if ( dI_Jerk               != NULL )   CUDA_SAFE_CALL(  cudaFree( dI_Jerk              )  );
-   if ( dI_Pot                != NULL )   CUDA_SAFE_CALL(  cudaFree( dI_Pot               )  );
-   if ( d_Nj_afterSplit_List  != NULL )   CUDA_SAFE_CALL(  cudaFree( d_Nj_afterSplit_List )  );
+   if ( dJ_Mass               != NULL )   CUDA_CHECK_ERROR(  cudaFree( dJ_Mass              )  );
+   if ( dJ_Pos                != NULL )   CUDA_CHECK_ERROR(  cudaFree( dJ_Pos               )  );
+   if ( dJ_Vel                != NULL )   CUDA_CHECK_ERROR(  cudaFree( dJ_Vel               )  );
+   if ( dI_Pos                != NULL )   CUDA_CHECK_ERROR(  cudaFree( dI_Pos               )  );
+   if ( dI_Vel                != NULL )   CUDA_CHECK_ERROR(  cudaFree( dI_Vel               )  );
+   if ( dI_Acc                != NULL )   CUDA_CHECK_ERROR(  cudaFree( dI_Acc               )  );
+   if ( dI_Jerk               != NULL )   CUDA_CHECK_ERROR(  cudaFree( dI_Jerk              )  );
+   if ( dI_Pot                != NULL )   CUDA_CHECK_ERROR(  cudaFree( dI_Pot               )  );
+   if ( d_Nj_afterSplit_List  != NULL )   CUDA_CHECK_ERROR(  cudaFree( d_Nj_afterSplit_List )  );
 
    dJ_Mass              = NULL;
    dJ_Pos               = NULL;
@@ -625,16 +629,16 @@ void CUAPI_MemFree()
 
 
 // free the host memory allocated by CUDA
-   if ( Mass                  != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Mass                 )  );
-   if ( Pos_Pred              != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Pos_Pred             )  );
-   if ( Vel_Pred              != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Vel_Pred             )  );
-   if ( Pos_LineUp            != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Pos_LineUp           )  );
-   if ( Vel_LineUp            != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Vel_LineUp           )  );
-   if ( Acc_local             != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Acc_local            )  );
-   if ( Jerk_local            != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( Jerk_local           )  );
-   if ( hI_Acc_Split          != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( hI_Acc_Split         )  );
-   if ( hI_Jerk_Split         != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( hI_Jerk_Split        )  );
-   if ( h_Nj_afterSplit_List  != NULL )   CUDA_SAFE_CALL(  cudaFreeHost( h_Nj_afterSplit_List )  );
+   if ( Mass                  != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Mass                 )  );
+   if ( Pos_Pred              != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Pos_Pred             )  );
+   if ( Vel_Pred              != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Vel_Pred             )  );
+   if ( Pos_LineUp            != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Pos_LineUp           )  );
+   if ( Vel_LineUp            != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Vel_LineUp           )  );
+   if ( Acc_local             != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Acc_local            )  );
+   if ( Jerk_local            != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( Jerk_local           )  );
+   if ( hI_Acc_Split          != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( hI_Acc_Split         )  );
+   if ( hI_Jerk_Split         != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( hI_Jerk_Split        )  );
+   if ( h_Nj_afterSplit_List  != NULL )   CUDA_CHECK_ERROR(  cudaFreeHost( h_Nj_afterSplit_List )  );
 
    Mass                 = NULL;
    Pos_Pred             = NULL;

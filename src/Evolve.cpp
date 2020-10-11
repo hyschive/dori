@@ -93,7 +93,7 @@ void Get_Next_Global_Time()
    for (int j=0; j<L; j++)
    {
       int i = PlayerList[j];
-      Next_Global_Time = min( t[i]+dt[i], Next_Global_Time );
+      Next_Global_Time = fmin( t[i]+dt[i], Next_Global_Time );
    }
 
    Next_Global_Time = Get_Minimum_FromAllRanks( Next_Global_Time );
@@ -141,7 +141,7 @@ void Get_NewTimeStep( const int i, const int j, const double ds )
                                 ( ds*sqrt( a1_sqr*a3_dt3_sqr ) + a2_dt2_sqr )   );
 
 // acceleration may be zero if only external acceleration is considered
-   if ( ! isfinite(Next_dt) )
+   if ( ! Aux_IsFinite(Next_dt) )
    {
       Aux_Message( stderr, "WARNING : strange time-step is found (Next_dt = %13.7e)\n", Next_dt );
       Aux_Message( stderr, "          ds = %13.7e, a0_sqr = %13.7e, a1_sqr = %13.7e, a2_dt2_sqr = %13.7e, a3_dt3_sqr = %13.7e\n",

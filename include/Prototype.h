@@ -20,6 +20,8 @@ void Aux_Message( FILE *Type, const char *Format, ... );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 void MPI_Exit();
 bool Aux_CheckFileExist( const char *FileName );
+int Aux_IsFinite( const float x );
+int Aux_IsFinite( const double x );
 
 
 // CUDA_API.h

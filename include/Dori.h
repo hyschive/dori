@@ -3,7 +3,7 @@
 
 
 
-#include <iostream>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
@@ -16,8 +16,6 @@
 #include "Typedef.h"
 #include "Prototype.h"
 #include "Global.h"
-
-using namespace std;
 
 
 

@@ -35,7 +35,7 @@ SIMU_OPTION += -DN_IS_MULTIPLE_OF_BS
 #SIMU_OPTION += -DSHARED_TIMESTEP
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
-SIMU_OPTION += -DGPU_ARCH=FERMI
+SIMU_OPTION += -DGPU_ARCH=TURING
 
 # enable OpenMP parallelization
 SIMU_OPTION += -DOPENMP
@@ -79,15 +79,15 @@ CC_FILE     := Main.cpp  DataTransfer.cpp  Auxiliary.cpp  Init.cpp  Evolve.cpp  
 # Rules and targets
 #######################################################################################################
 
-NVCC := nvcc
-CXX  := mpiCC
+NVCC = $(CUDA_PATH)/bin/nvcc
+CXX  = $(MPI_PATH)/bin/mpicxx
 
 
-# hulk (openmpi-intel)
-CUDA_TOOLKIT_PATH := /opt/gpu/cuda/default
-MPI_PATH          := /opt/mpi/openmpi/1.6.0-intel
+# NTU-eureka (default: openmpi-intel)
+CUDA_PATH := /software/cuda/default
+MPI_PATH  := /software/openmpi/default
 
-OBJ_PATH          := Object
+OBJ_PATH  := Object
 
 vpath %.cu CUDA
 
@@ -96,7 +96,7 @@ LIB := -limf
 #LIB :=
 
 ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-   LIB += -L$(CUDA_TOOLKIT_PATH)/lib64 -lcudart
+   LIB += -L$(CUDA_PATH)/lib64 -lcudart
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
@@ -113,10 +113,10 @@ CXXWARN_FLAG := -w1
                 -Wmultichar -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
-CXXWARN_FLAG += -Wno-unknown-pragmas
+CXXWARN_FLAG += -Wno-unknown-pragmas -diag-disable 3180
 endif
 
-CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -xSSE4.2 -fp-model precise #-debug -g
+CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -g
 
 NVCCFLAG := -Xcompiler $(COMMONFLAG) -O3 #--ptxas-options=-v #-D_DEBUG #-deviceemu
 
@@ -161,13 +161,14 @@ $(OBJ_PATH)/%.o : %.cu
 # link all object files
 $(EXECUTABLE) : $(OBJ)
 	$(CXX) -o $@ $^ $(LIB) $(OPENMP)
-	cp $(EXECUTABLE) ../bin/run/
+	cp $(EXECUTABLE) ../bin/
 	rm ./*.linkinfo -f
 
+
+# clean
+# -------------------------------------------------------------------------------
+.PHONY: clean
 clean :
-	rm -f $(OBJ_PATH)/*
-	rm -f $(EXECUTABLE)
-	rm ./*.linkinfo -f
-
-
-
+	@rm -f $(OBJ_PATH)/*
+	@rm -f $(EXECUTABLE)
+	@rm -f ./*.linkinfo
