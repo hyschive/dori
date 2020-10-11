@@ -123,11 +123,8 @@ In the following, a detailed description is given for each of these steps.
        in which different particles can have different time-steps
        (restricted to be the power of two).
 
-   (9) FERMI :
-       Enable the performance optimization in Fermi GPUs. You should always
-       turn on this option if you are using the Fermi GPUs. Running program
-       with this option on using GPUs incompatible to the Fermi architecture
-       will result in a run-time error.
+   (9) GPU_ARCH :
+       GPU architecture.
 
 
 3. Set up the simulation parameters related to the GPU implementation.

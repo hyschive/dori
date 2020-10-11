@@ -34,8 +34,8 @@ SIMU_OPTION += -DN_IS_MULTIPLE_OF_BS
 # shared time-step (otherwise the individual time-step is adopted)
 #SIMU_OPTION += -DSHARED_TIMESTEP
 
-# enable the performance optimization in Fermi GPUs
-SIMU_OPTION += -DFERMI
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL/VOLTA/TURING
+SIMU_OPTION += -DGPU_ARCH=FERMI
 
 # enable OpenMP parallelization
 SIMU_OPTION += -DOPENMP
@@ -45,16 +45,20 @@ SIMU_OPTION += -DOPENMP
 # simulation parameters
 #######################################################################################################
 
-ifeq "$(findstring FERMI, $(SIMU_OPTION))" "FERMI"
-BLOCK_SIZE = 128   # size of CUDA thread block (for Fermi GPUs)
-GRID_SIZE  = 56    # size of CUDA thread grid  (for Fermi GPUs)
+# size of CUDA thread block and grid
+ifeq      "$(filter -DGPU_ARCH=FERMI,   $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
+BLOCK_SIZE = 128
+GRID_SIZE  = 56
+else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
+BLOCK_SIZE = 128
+GRID_SIZE  = 48
 else
-BLOCK_SIZE = 128   # size of CUDA thread block
-GRID_SIZE  = 32    # size of CUDA thread grid
+BLOCK_SIZE = 128
+GRID_SIZE  = 32
 endif
 
-BLOCK_SIZE         := $(strip $(BLOCK_SIZE))
-GRID_SIZE          := $(strip $(GRID_SIZE))
+BLOCK_SIZE := $(strip $(BLOCK_SIZE))
+GRID_SIZE  := $(strip $(GRID_SIZE))
 
 SIMU_PARA = -DBLOCK_SIZE=$(BLOCK_SIZE) -DGRID_SIZE=$(GRID_SIZE)
 
@@ -115,7 +119,7 @@ ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
-   OPENMP := -openmp
+   OPENMP := -fopenmp
 endif
 
 
@@ -135,17 +139,27 @@ CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -xSSE4.2 -fp-model preci
 
 NVCCFLAG := -Xcompiler $(COMMONFLAG) -O3 #--ptxas-options=-v #-D_DEBUG #-deviceemu
 
-NVCCFLAG += -gencode arch=compute_20,code=\"compute_20,sm_20\"
-ifeq "$(findstring FERMI, $(SIMU_OPTION))" ""
-   NVCCFLAG += -gencode arch=compute_13,code=\"compute_13,sm_13\"
-   ifeq "$(findstring FLOAT8_ACC, $(SIMU_OPTION))" ""
-      NVCCFLAG += -gencode arch=compute_10,code=\"compute_10,sm_10\"
-   endif
+ifeq      "$(filter -DGPU_ARCH=FERMI,   $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
+   NVCCFLAG += -gencode arch=compute_20,code=\"compute_20,sm_20\"
+else ifeq "$(filter -DGPU_ARCH=KEPLER,  $(SIMU_OPTION))" "-DGPU_ARCH=KEPLER"
+   NVCCFLAG += -gencode arch=compute_30,code=\"compute_30,sm_30\"
+   NVCCFLAG += -gencode arch=compute_35,code=\"compute_35,sm_35\"
+   NVCCFLAG += -gencode arch=compute_37,code=\"compute_37,sm_37\"
+else ifeq "$(filter -DGPU_ARCH=MAXWELL, $(SIMU_OPTION))" "-DGPU_ARCH=MAXWELL"
+   NVCCFLAG += -gencode arch=compute_50,code=\"compute_50,sm_50\"
+   NVCCFLAG += -gencode arch=compute_52,code=\"compute_52,sm_52\"
+else ifeq "$(filter -DGPU_ARCH=PASCAL,  $(SIMU_OPTION))" "-DGPU_ARCH=PASCAL"
+   NVCCFLAG += -gencode arch=compute_60,code=\"compute_60,sm_60\"
+   NVCCFLAG += -gencode arch=compute_61,code=\"compute_61,sm_61\"
+else ifeq "$(filter -DGPU_ARCH=VOLTA,  $(SIMU_OPTION))" "-DGPU_ARCH=VOLTA"
+   NVCCFLAG += -gencode arch=compute_70,code=\"compute_70,sm_70\"
+else ifeq "$(filter -DGPU_ARCH=TURING,  $(SIMU_OPTION))" "-DGPU_ARCH=TURING"
+   NVCCFLAG += -gencode arch=compute_75,code=\"compute_75,sm_75\"
+else ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
+   $(error unknown GPU_ARCH (please set it in the Makefile))
 endif
 
-ifeq "$(findstring FERMI, $(SIMU_OPTION))" "FERMI"
-   NVCCFLAG += -prec-div=false -prec-sqrt=false -ftz=true
-endif
+NVCCFLAG += -prec-div=false -prec-sqrt=false -ftz=true
 
 
 OBJ := $(patsubst %.cpp, $(OBJ_PATH)/%.o, $(CC_FILE))

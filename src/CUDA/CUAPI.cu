@@ -175,25 +175,46 @@ void CUAPI_SetDevice( const int Mode )
    }
 #  endif
 
-// (5) verify the Fermi architecture
-#  ifdef FERMI
-   if ( DeviceProp.major < 2 )
-   {
-      fprintf( stderr, "ERROR : the GPU \"%s\" at rank %2d (host = %8s) is not compatible to the \n",
-               DeviceProp.name, MyRank, Host );
-      fprintf( stderr, "        Fermi architecture !! Please turn off the option \"FERMI\" in the Makefile.\n" );
-      exit(-1);
-   }
+// (5) verify the GPU architecture
+#  if   ( GPU_ARCH == FERMI )
+   if ( DeviceProp.major != 2 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Fermi architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == KEPLER )
+   if ( DeviceProp.major != 3 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Kepler architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == MAXWELL )
+   if ( DeviceProp.major != 5 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Maxwell architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == PASCAL )
+   if ( DeviceProp.major != 6 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Pascal architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == VOLTA )
+   if ( DeviceProp.major != 7  &&  DeviceProp.minor != 0 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Volta architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == TURING )
+   if ( DeviceProp.major != 7  &&  DeviceProp.minor != 5 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Turing architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
 #  else
-   if ( DeviceProp.major >= 2 )
-   {
-      fprintf( stderr, "WARNING : the GPU \"%s\" at rank %2d (host = %8s) is compatible ",
-               DeviceProp.name, MyRank, Host );
-      fprintf( stderr,           "to the Fermi architecture !!\n" );
-      fprintf( stderr, "          --> You can turn on the option \"FERMI\" in the Makefile to improve " );
-      fprintf( stderr,               "the performance.\n" );
-   }
-#  endif
+#  error : UNKNOWN GPU_ARCH !!
+#  endif // GPU_ARCH
 
 // (6) check if GRID_SIZE is a multiple of the number of multiprocesors
    if ( GRID_SIZE % DeviceProp.multiProcessorCount != 0 )

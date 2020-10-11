@@ -18,6 +18,15 @@
 #define NONE      0
 
 
+// GPU architecture
+#define FERMI        1
+#define KEPLER       2
+#define MAXWELL      3
+#define PASCAL       4
+#define VOLTA        5
+#define TURING       6
+
+
 // extreme values
 #ifndef __INT_MAX__
 #  define __INT_MAX__      2147483647

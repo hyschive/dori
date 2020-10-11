@@ -135,10 +135,22 @@ void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP
    fprintf( Note, "SHARED_TIMESTEP     : OFF\n" );
 #  endif
 
-#  ifdef FERMI
-   fprintf( Note, "FERMI               : ON\n" );
+#  ifdef GPU
+#  if   ( GPU_ARCH == FERMI )
+   fprintf( Note, "GPU_ARCH            : FERMI\n" );
+#  elif ( GPU_ARCH == KEPLER )
+   fprintf( Note, "GPU_ARCH            : KEPLER\n" );
+#  elif ( GPU_ARCH == MAXWELL )
+   fprintf( Note, "GPU_ARCH            : MAXWELL\n" );
+#  elif ( GPU_ARCH == PASCAL )
+   fprintf( Note, "GPU_ARCH            : PASCAL\n" );
+#  elif ( GPU_ARCH == VOLTA )
+   fprintf( Note, "GPU_ARCH            : VOLTA\n" );
+#  elif ( GPU_ARCH == TURING )
+   fprintf( Note, "GPU_ARCH            : TURING\n" );
 #  else
-   fprintf( Note, "FERMI               : OFF\n" );
+   fprintf( Note, "GPU_ARCH            : UNKNOWN\n" );
+#  endif
 #  endif
 
 #  ifdef OPENMP
