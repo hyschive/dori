@@ -8,9 +8,6 @@
 #include <cstring>
 #include <cmath>
 #include <mpi.h>
-#ifdef GPU
-#include <cutil.h>
-#endif
 #ifdef OPENMP
 #  include <omp.h>
 #endif

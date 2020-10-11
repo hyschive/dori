@@ -10,15 +10,12 @@
 // "J" particles are packed into "N/GroupSize_J" "JGroup"s with "GroupSize_J" particles within each group
 //---------------------------------------------------------------------------------------------------
 
-#include <cutil.h>
 #include "Dori.h"
 
 #define I_Start      bx * BLOCK_SIZE
 #define J_Start      0
 #define GroupSize_I  GRID_SIZE * BLOCK_SIZE
 #define GroupSize_J  BLOCK_SIZE
-
-#define SDATA(array, index)  CUT_BANK_CHECKER(array, index)
 
 
 
@@ -54,11 +51,11 @@ __global__ void CUCAL_Pot( const int Nj, real gJ_Mass[], real gJ_Pos[][3],
           int jj = J_Base+tx;
           int j  = jj%Nj;
 
-          SDATA(sJ_Mass,tx)  = gJ_Mass[j];
+          sJ_Mass [tx] = gJ_Mass[j];
 
-          SDATA(sJ_Pos_x,tx) = gJ_Pos[j][0];
-          SDATA(sJ_Pos_y,tx) = gJ_Pos[j][1];
-          SDATA(sJ_Pos_z,tx) = gJ_Pos[j][2];
+          sJ_Pos_x[tx] = gJ_Pos [j][0];
+          sJ_Pos_y[tx] = gJ_Pos [j][1];
+          sJ_Pos_z[tx] = gJ_Pos [j][2];
 
           __syncthreads();
 
@@ -72,9 +69,9 @@ __global__ void CUCAL_Pot( const int Nj, real gJ_Mass[], real gJ_Pos[][3],
 
 //          evaluate the gravitaional potential
 //---------------------------------------------------------------------
-            real dx = SDATA(sJ_Pos_x,k)-I_Pos_x;
-            real dy = SDATA(sJ_Pos_y,k)-I_Pos_y;
-            real dz = SDATA(sJ_Pos_z,k)-I_Pos_z;
+            real dx = sJ_Pos_x[k] - I_Pos_x;
+            real dy = sJ_Pos_y[k] - I_Pos_y;
+            real dz = sJ_Pos_z[k] - I_Pos_z;
 
 #           ifdef SOFTEN
             real R2  = dx*dx + Eps2;
@@ -97,7 +94,7 @@ __global__ void CUCAL_Pot( const int Nj, real gJ_Mass[], real gJ_Pos[][3],
 #              else
                if ( R2 != (real)0.0 )
                #endif
-               Pot += SDATA(sJ_Mass,k)*mRinv;
+               Pot += sJ_Mass[k]*mRinv;
 
 #           ifndef N_IS_MULTIPLE_OF_BS
             }

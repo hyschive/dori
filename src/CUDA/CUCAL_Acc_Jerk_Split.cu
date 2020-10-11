@@ -25,7 +25,6 @@
 //---------------------------------------------------------------------------------------------------
 
 
-#include <cutil.h>
 #include "Dori.h"
 
 #define I_Start         __umul24(bx, BLOCK_SIZE)
@@ -34,8 +33,6 @@
 #define J_End           ( J_Start + Nj_afterSplit_List[NthSeg] )
 #define GroupSize_I     GRID_SIZE * BLOCK_SIZE
 #define GroupSize_J     BLOCK_SIZE
-
-#define SDATA(array, index)  CUT_BANK_CHECKER(array, index)
 
 
 
@@ -90,15 +87,15 @@ __global__ void CUCAL_Acc_Jerk_Split( const int Nj, real gJ_Mass[], real gJ_Pos[
          int jj = J_Base+tx;
          int j  = jj%Nj;   // deal with the case that Nj is not a multiple of block size
 
-         SDATA(sJ_Mass,tx)  = gJ_Mass[j];
+         sJ_Mass [tx] = gJ_Mass[j];
 
-         SDATA(sJ_Pos_x,tx) = gJ_Pos[j][0];
-         SDATA(sJ_Pos_y,tx) = gJ_Pos[j][1];
-         SDATA(sJ_Pos_z,tx) = gJ_Pos[j][2];
+         sJ_Pos_x[tx] = gJ_Pos [j][0];
+         sJ_Pos_y[tx] = gJ_Pos [j][1];
+         sJ_Pos_z[tx] = gJ_Pos [j][2];
 
-         SDATA(sJ_Vel_x,tx) = gJ_Vel[j][0];
-         SDATA(sJ_Vel_y,tx) = gJ_Vel[j][1];
-         SDATA(sJ_Vel_z,tx) = gJ_Vel[j][2];
+         sJ_Vel_x[tx] = gJ_Vel [j][0];
+         sJ_Vel_y[tx] = gJ_Vel [j][1];
+         sJ_Vel_z[tx] = gJ_Vel [j][2];
 
          __syncthreads();
 
@@ -112,9 +109,9 @@ __global__ void CUCAL_Acc_Jerk_Split( const int Nj, real gJ_Mass[], real gJ_Pos[
 
 //          evaluate the gravitational acceleration and jerk
 //---------------------------------------------------------------------
-            real dx  = SDATA(sJ_Pos_x,k)-I_Pos_x;
-            real dy  = SDATA(sJ_Pos_y,k)-I_Pos_y;
-            real dz  = SDATA(sJ_Pos_z,k)-I_Pos_z;
+            real dx  = sJ_Pos_x[k] - I_Pos_x;
+            real dy  = sJ_Pos_y[k] - I_Pos_y;
+            real dz  = sJ_Pos_z[k] - I_Pos_z;
 
 #           ifdef SOFTEN
             real R2  = dx*dx + Eps2;
@@ -124,14 +121,14 @@ __global__ void CUCAL_Acc_Jerk_Split( const int Nj, real gJ_Mass[], real gJ_Pos[
                  R2 += dy*dy;
                  R2 += dz*dz;
 
-            real Rinv   = (real)1.0 / SQRT(R2);
-            real R2inv  = Rinv*Rinv;
-            real R3inv  = R2inv*Rinv;
-            real MR3inv = SDATA(sJ_Mass,k)*R3inv;
+            real Rinv      = (real)1.0 / SQRT(R2);
+            real R2inv     = Rinv*Rinv;
+            real R3inv     = R2inv*Rinv;
+            real MR3inv    = sJ_Mass[k]*R3inv;
 
-            real dVx = SDATA(sJ_Vel_x,k)-I_Vel_x;
-            real dVy = SDATA(sJ_Vel_y,k)-I_Vel_y;
-            real dVz = SDATA(sJ_Vel_z,k)-I_Vel_z;
+            real dVx       = sJ_Vel_x[k] - I_Vel_x;
+            real dVy       = sJ_Vel_y[k] - I_Vel_y;
+            real dVz       = sJ_Vel_z[k] - I_Vel_z;
 
             real dR_dot_dV = dx*dVx + dy*dVy + dz*dVz;
             real Temp      = -(real)3.0*dR_dot_dV*R2inv;

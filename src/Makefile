@@ -85,24 +85,7 @@ CXX  := mpiCC
 
 # hulk (openmpi-intel)
 CUDA_TOOLKIT_PATH := /opt/gpu/cuda/default
-CUDA_SDK_PATH     := /opt/gpu/cuda_sdk/default/C
 MPI_PATH          := /opt/mpi/openmpi/1.6.0-intel
-
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#CUDA_SDK_PATH     := /opt/devel/nvidia/C
-#MPI_PATH          := /opt/mpi/openmpi_intel
-
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#CUDA_SDK_PATH     := /opt/devel/nvidia/C
-#MPI_PATH          := /opt/mpi/openmpi
-
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#CUDA_SDK_PATH     := /opt/cuda_sdk.3.1/C
-#MPI_PATH          := /usr/local
-
-#CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/3.1
-#CUDA_SDK_PATH     := /global/scratch/sd/hsiyu/cuda_sdk.3.1/C
-#MPI_PATH          := /usr/common/usg/openmpi/1.4.2/gnu
 
 OBJ_PATH          := Object
 
@@ -113,8 +96,6 @@ LIB := -limf
 #LIB :=
 
 ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-#  LIB := -L$(CUDA_SDK_PATH)/lib -lcutil
-   LIB += -L$(CUDA_SDK_PATH)/lib -lcutil_x86_64
    LIB += -L$(CUDA_TOOLKIT_PATH)/lib64 -lcudart
 endif
 
@@ -123,7 +104,7 @@ ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
 endif
 
 
-INCLUDE := -I../include -I$(CUDA_SDK_PATH)/common/inc -I$(MPI_PATH)/include
+INCLUDE := -I../include -I$(MPI_PATH)/include
 
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION) $(SIMU_PARA)
 

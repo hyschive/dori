@@ -95,12 +95,7 @@ int main( int argc, char* argv[] )
    if ( DT_DIAGNOSIS_DT >= 0.0 )    dt_diagnosis();
 
 
-   double Timer_MPI = MPI_Wtime();     // MPI timer
-#  ifdef GPU
-   unsigned int Timer_CUTIL = 0;       // CUTIL timer
-   CUT_SAFE_CALL( cutCreateTimer(&Timer_CUTIL) );
-   CUT_SAFE_CALL( cutStartTimer(Timer_CUTIL) );
-#  endif
+   double Timer_MPI = MPI_Wtime();  // MPI timer
 
 // main loop
 // ======================================================================================================
@@ -156,10 +151,6 @@ int main( int argc, char* argv[] )
    MPI_Barrier( MPI_COMM_WORLD );
    Timer_MPI = MPI_Wtime() - Timer_MPI;
 
-#  ifdef GPU
-   CUT_SAFE_CALL( cutStopTimer(Timer_CUTIL) );
-#  endif
-
 
    if ( ENERGY_DT >= 0.0 )    Get_TotalEnergy( false, 0.0 );
 
@@ -176,10 +167,6 @@ int main( int argc, char* argv[] )
       fprintf( Note, "Total Steps                      : %ld\n" , Step );
       fprintf( Note, "Total Processing Time (by MPI)   : %lf s\n", Timer_MPI );
       fprintf( Note, "Time per Step         (by MPI)   : %lf s\n", Timer_MPI/Step );
-#     ifdef GPU
-      fprintf( Note, "Total Processing Time (by CUTIL) : %lf s\n", cutGetTimerValue(Timer_CUTIL)/1000.0 );
-      fprintf( Note, "Time per Step         (by CUTIL) : %lf s\n", cutGetTimerValue(Timer_CUTIL)/1000.0/Step );
-#     endif
       fprintf( Note, "\n");
 
       fclose( Note );
@@ -189,7 +176,6 @@ int main( int argc, char* argv[] )
    MemoryFree();
 
 #  ifdef GPU
-   CUT_SAFE_CALL( cutDeleteTimer(Timer_CUTIL) );
    CUAPI_MemFree();
 #  endif
 
