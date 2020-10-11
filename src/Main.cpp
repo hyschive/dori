@@ -108,7 +108,7 @@ int main( int argc, char* argv[] )
 
 
 //    determine the group of particles to be advanced to the Next_Global_Time
-//    (for the shared time-step, we only have to set up the line-up starts list once during the intialization)
+//    (for the shared time-step, we only have to set up the line-up starts list once during the initialization)
 #     ifndef SHARED_TIMESTEP
       Get_LineUpStars();
 #     endif
