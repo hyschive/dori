@@ -188,7 +188,7 @@ void Get_NewTimeStep( const int i, const int j, const double ds )
 // Function    :  BeginRing_Acc_Jerk
 // Description :  Use the Ring Scheme to accumulate the acceleration and jerk from all other particles
 //----------------------------------------------------------------------
-void BeginRing_Acc_Jerk( const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
+void BeginRing_Acc_Jerk( const double Time, const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
                          real Jerk_Pred[][3], const int L_List[], const int L_Max )
 {
 
@@ -314,8 +314,8 @@ void BeginRing_Acc_Jerk( const real Pos_Pred[][3], const real Vel_Pred[][3], rea
    {
       switch ( EXT_METHOD )
       {
-         case EXT_FUNC :   Ext_AddAccFromFunc( L, Pos_LineUp, Vel_LineUp, Acc_Pred, Jerk_Pred );  break;
-         case EXT_FILE :   Ext_AddAccFromFile( L, Pos_LineUp, Vel_LineUp, Acc_Pred, Jerk_Pred );  break;
+         case EXT_FUNC :   Ext_AddAccFromFunc( L, Pos_LineUp, Vel_LineUp, Acc_Pred, Jerk_Pred, Time );   break;
+         case EXT_FILE :   Ext_AddAccFromFile( L, Pos_LineUp, Vel_LineUp, Acc_Pred, Jerk_Pred, Time );   break;
          default       :   Aux_Error( ERROR_INFO, "unsupported EXT_METHOD (%d) !!\n", EXT_METHOD );
       }
    } // if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )
@@ -426,9 +426,9 @@ void KickStars( const bool Sync )
 // get the acceleration and jerk from predicted postion and velocity
 //=====================================================================
 #  ifdef HYBRID_SCHEME
-   BeginHybrid_Acc_Jerk ( Pos_Pred, Vel_Pred, Acc_Pred, Jerk_Pred, L_List );
+   BeginHybrid_Acc_Jerk ( Next_Global_Time, Pos_Pred, Vel_Pred, Acc_Pred, Jerk_Pred, L_List );
 #  else
-   BeginRing_Acc_Jerk   ( Pos_Pred, Vel_Pred, Acc_Pred, Jerk_Pred, L_List, L_Max );
+   BeginRing_Acc_Jerk   ( Next_Global_Time, Pos_Pred, Vel_Pred, Acc_Pred, Jerk_Pred, L_List, L_Max );
 #  endif
 
 
@@ -515,7 +515,7 @@ void KickStars( const bool Sync )
 // Description :  Calculate the acceleration and jerk by hybrid scheme (Harfst, 2007)
 //                --> The alterantive subroutine to BeginRing_Acc_Jerk
 //----------------------------------------------------------------------
-void BeginHybrid_Acc_Jerk( const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
+void BeginHybrid_Acc_Jerk( const double Time, const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
                            real Jerk_Pred[][3], const int L_List[] )
 {
    int RecvCounts_List[NGPU], Disp_List[NGPU];
@@ -601,8 +601,8 @@ void BeginHybrid_Acc_Jerk( const real Pos_Pred[][3], const real Vel_Pred[][3], r
    {
       switch ( EXT_METHOD )
       {
-         case EXT_FUNC :   Ext_AddAccFromFunc( L, Pos_LineUp_local, Vel_LineUp_local, Acc_Pred, Jerk_Pred );  break;
-         case EXT_FILE :   Ext_AddAccFromFile( L, Pos_LineUp_local, Vel_LineUp_local, Acc_Pred, Jerk_Pred );  break;
+         case EXT_FUNC :   Ext_AddAccFromFunc( L, Pos_LineUp_local, Vel_LineUp_local, Acc_Pred, Jerk_Pred, Time );   break;
+         case EXT_FILE :   Ext_AddAccFromFile( L, Pos_LineUp_local, Vel_LineUp_local, Acc_Pred, Jerk_Pred, Time );   break;
          default       :   Aux_Error( ERROR_INFO, "unsupported EXT_METHOD (%d) !!\n", EXT_METHOD );
       }
    } // if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )

@@ -9,14 +9,15 @@
 // Note        :  1. External acceleration (and jerk) will be ADDED to the input array
 //                2. External jerk is calculated only when EXT_JERK == true
 //
-// Parameter   :  NPar     : Number of particles to be calculated
-//                MyPos    : Position array
-//                MyVel    : Velocity array
-//                MyAcc    : Acceleration array
-//                MyJerk   : Jerk array
+// Parameter   :  NPar   : Number of particles to be calculated
+//                MyPos  : Position array
+//                MyVel  : Velocity array
+//                MyAcc  : Acceleration array
+//                MyJerk : Jerk array
+//                Time   : Target physical time
 //----------------------------------------------------------------------
 void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*MyVel)[3],
-                         real (*MyAcc)[3], real (*MyJerk)[3] )
+                         real (*MyAcc)[3], real (*MyJerk)[3], const double Time )
 {
 
 // example 1 : point mass at origin
@@ -55,14 +56,15 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
 // Note        :  1. External acceleration (and jerk) will be ADDED to the input array
 //                2. External jerk is calculated only when EXT_JERK == true
 //
-// Parameter   :  NPar     : Number of particles to be calculated
-//                MyPos    : Position array
-//                MyVel    : Velocity array
-//                MyAcc    : Acceleration array
-//                MyJerk   : Jerk array
+// Parameter   :  NPar   : Number of particles to be calculated
+//                MyPos  : Position array
+//                MyVel  : Velocity array
+//                MyAcc  : Acceleration array
+//                MyJerk : Jerk array
+//                Time   : Target physical time
 //----------------------------------------------------------------------
 void Ext_AddAccFromFile( const int NPar, const real (*MyPos)[3], const real (*MyVel)[3],
-                         real (*MyAcc)[3], real (*MyJerk)[3] )
+                         real (*MyAcc)[3], real (*MyJerk)[3], const double Time )
 {
 
    const int  NSkip = (EXT_JERK) ? ( (EXT_ACC_DER==EXT_ACC_DER_QUAR) ? 2 : 1 ) : 0;    // we don't have dAcc at the boundary cells

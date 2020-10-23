@@ -121,7 +121,7 @@ void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Ener
 // Description :  Initialize the particles's mass, position, velocity, acceleration, and jerk;
 //                Set the initial PlayerList
 //---------------------------------------------------------------------------------------------------
-void Init_Particles()
+void Init_Particles( const double INIT_T )
 {
 
    if ( MyRank == 0 )    fprintf( stdout, "Initialize particle data ...\n" );
@@ -240,9 +240,9 @@ void Init_Particles()
    for (int i=0; i<NGPU; i++)    Temp_List[i] = N;
 
 #  ifdef HYBRID_SCHEME
-   BeginHybrid_Acc_Jerk( Pos, Vel, Acc, Jerk, Temp_List );
+   BeginHybrid_Acc_Jerk( INIT_T, Pos, Vel, Acc, Jerk, Temp_List );
 #  else
-   BeginRing_Acc_Jerk  ( Pos, Vel, Acc, Jerk, Temp_List, N );
+   BeginRing_Acc_Jerk  ( INIT_T, Pos, Vel, Acc, Jerk, Temp_List, N );
 #  endif
 
 

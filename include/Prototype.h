@@ -57,7 +57,7 @@ void AllReduce( real Array_partial[][3], real Array_sum[][3], const int ArraySiz
 
 // Evolve.h
 void Get_NewTimeStep( const int i, const int j, const double ds );
-void BeginRing_Acc_Jerk( const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
+void BeginRing_Acc_Jerk( const double Time, const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
                          real Jerk_Pred[][3], const int L_List[], const int L_Max );
 void BeginRing_Pot();
 void KickStars( const bool Sync );
@@ -66,7 +66,7 @@ void Get_Next_Global_Time();
 void Get_LineUpStars();
 void Synchronize();
 #ifdef HYBRID_SCHEME
-void BeginHybrid_Acc_Jerk( const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
+void BeginHybrid_Acc_Jerk( const double Time, const real Pos_Pred[][3], const real Vel_Pred[][3], real Acc_Pred[][3],
                            real Jerk_Pred[][3], const int L_List[] );
 #endif
 
@@ -76,7 +76,7 @@ void Init_MPI( int argc, char *argv[] );
 void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Energy_t, double &Output_t,
                      double &dt_diagnosis_t, const double ENERGY_DT, const double OUTPUT_DT,
                      const double DT_DIAGNOSIS_DT, const bool CONST_INIT_DT );
-void Init_Particles();
+void Init_Particles( const double INIT_T );
 void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int &END_STEP,
                     double &OUTPUT_DT, double &ENERGY_DT, double &DT_DIAGNOSIS_DT,
                     int &RESTART, real &INIT_E, int &INIT_DUMP_ID, bool &BINARY_OUTPUT, bool &CONST_INIT_DT,
@@ -96,9 +96,9 @@ void CPU_Pot( const int Nj, real J_Mass[], real J_Pos[][3], const int Ni, real I
 
 // ExternalForce.h
 void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*MyVel)[3],
-                         real (*MyAcc)[3], real (*MyJerk)[3] );
+                         real (*MyAcc)[3], real (*MyJerk)[3], const double Time );
 void Ext_AddAccFromFile( const int NPar, const real (*MyPos)[3], const real (*MyVel)[3],
-                         real (*MyAcc)[3], real (*MyJerk)[3] );
+                         real (*MyAcc)[3], real (*MyJerk)[3], const double Time );
 void Ext_LoadExtAcc();
 
 

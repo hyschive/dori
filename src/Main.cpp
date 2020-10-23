@@ -80,7 +80,7 @@ int main( int argc, char* argv[] )
    CUAPI_MemAllocate();
 #  endif
 
-   Init_Particles();
+   Init_Particles( INIT_T );
    Init_t_dt_step( INIT_T, INIT_STEP, Energy_t, Output_t, dt_diagnosis_t, ENERGY_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
                    CONST_INIT_DT );
 
