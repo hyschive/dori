@@ -1,6 +1,6 @@
 8192     TOTAL_N           # total number of particles
 2        NGPU              # number of processes (number of particles in each process (N) = TOTAL_N/NGPU)
-3        OMP_NTHREAD       # number of OpenMP threads (<=0:default [omp_get_max_threads])
+8        OMP_NTHREAD       # number of OpenMP threads (<=0:default [omp_get_max_threads])
 1.e-3    EPS               # soften length
 -1.0     NEWTON_G          # gravitational constant (<=0.0: assume to be 1.0)
 0.13     ETA               # time-step factor
