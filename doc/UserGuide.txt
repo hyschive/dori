@@ -49,7 +49,7 @@ To run the program, there are basically 4 steps:
    by typing "make"
 2. Properly set all parameters in the file "Input__Parameter"
 3. Provide the initial condition file, which must be named "INIT_CONDITION"
-4. Run the program by the command "mpirun -np NGPU ./Swim" for using
+4. Run the program by the command "mpirun -np NGPU ./swim" for using
    "NGPU" GPUs.
 
 In the following, a detailed description is given for each of these steps.
@@ -165,7 +165,7 @@ In the following, a detailed description is given for each of these steps.
 
          make
 
-   An executable named "Swim" will be generated and copied to the directory
+   An executable named "swim" will be generated and copied to the directory
    "Run". All object files will be put in the directory "Object".
 
 
@@ -174,7 +174,7 @@ In the following, a detailed description is given for each of these steps.
 | II. Parameter File |
 ----------------------
 To run the program, the parameter file "Input__Parameter" must be properly set
-and placed in the same directory as the executable "Swim". Please refer to the
+and placed in the same directory as the executable "swim". Please refer to the
 file "Input__Parameter" for a brief description of all parameters.
 Below are some additional description of the parameter setting.
 
@@ -217,7 +217,7 @@ Below are some additional description of the parameter setting.
 -------------------------------
 To run the program, an initial condition file must be provided. This file
 should always be named "INIT_CONDITION" and be placed in the same directory as
-the executable "Swim". One straightforward way to set up the targeted initial
+the executable "swim". One straightforward way to set up the targeted initial
 condition is to make a symbolic link to the particle data file as following :
 
       ln -fs ParticleDataFile(or any previous data dump) INIT_CONDITION
@@ -241,7 +241,7 @@ numbers in the parentheses indicate the particle indices.
 | IV. Make Dori swim |
 ----------------------
 There are 4 files required for making Dori swim:
-   (1) Executable          -->   "Swim"
+   (1) Executable          -->   "swim"
    (2) Parameter file      -->   "Input__Parameter"
    (3) Note file           -->   "Input__NoteScript"
    (4) Initial condition   -->   "INIT_CONDITION"
@@ -249,12 +249,12 @@ There are 4 files required for making Dori swim:
 These 4 files must be put in the same directory (the default directory is
 "Run"). To run the program, you can use the command
 
-         mpirun -np NGPU ./Swim
+         mpirun -np NGPU ./swim
 
 where NGPU is the number of MPI processes you want to use. For example, in a
 single GPU system, you can type
 
-         mpirun -np 1 ./Swim
+         mpirun -np 1 ./swim
 
 *** The "NGPU" input in the command "mpirun -np NGPU" must be equal to the
 parameter "NGPU" in the parameter file.
