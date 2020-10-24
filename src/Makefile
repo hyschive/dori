@@ -3,7 +3,7 @@
 
 # the name of the executable file
 #######################################################################################################
-EXECUTABLE  := Swim
+EXECUTABLE  := swim
 
 
 

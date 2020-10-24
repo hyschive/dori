@@ -262,7 +262,7 @@ void dt_diagnosis()
          char PowStr[3], Sign;
          int Pow;
 
-         fprintf( File, "%13s ", "Global_Time" );
+         fprintf( File, "#%12s ", "Global_Time" );
          for (int Bin=0; Bin<NPow; Bin++)
          {
             Pow  = MaxPow - Bin;
@@ -357,7 +357,7 @@ void Get_TotalEnergy( bool UseInputEgy, real INIT_E )
          FILE *File = fopen( FileName, "a" );
 
          if ( PreviousStep == -1 )  // first time of invocation
-            fprintf( File, "%13s  %10s  %14s  %14s  %14s  %14s  %14s\n",
+            fprintf( File, "#%12s  %10s  %14s  %14s  %14s  %14s  %14s\n",
                      "Global_Time", "Step", "K.E.", "P.E", "Total E", "Abs Err", "Rel Err" );
 
          fprintf( File, "%13.7e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e\n",
@@ -406,9 +406,9 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
          FILE *File_Record = fopen( "Record__Dump", "a" );
 
          if ( DumpID == Init_DumpID )
-            fprintf( File_Record, "%6s    %20s    %9s\n", "DumpID", "Global_Time", "Step" );
+            fprintf( File_Record, "#%7s    %20s    %9s\n", "DumpID", "Global_Time", "Step" );
 
-         fprintf( File_Record, "%6d    %20.14e    %9ld\n", DumpID, Global_Time, Step );
+         fprintf( File_Record, "%8d    %20.14e    %9ld\n", DumpID, Global_Time, Step );
 
          fclose( File_Record );
       }
@@ -468,7 +468,7 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
 
                   File = fopen( FileName[0],"w" );
 
-                  fprintf( File, "%14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+                  fprintf( File, "#%13s  %14s  %14s  %14s  %14s  %14s  %14s\n",
                            "Mass", "x", "y", "z", "Vx", "Vy", "Vz" );
                }
                else
