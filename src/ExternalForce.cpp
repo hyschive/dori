@@ -24,7 +24,8 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
                          real (*MyAcc)[3], real (*MyJerk)[3], const double Time )
 {
 
-// example 1 : point mass at origin
+// ===================================================================
+// set the external gravity to represent the second star in a binary system
 // ===================================================================
    const real Theta0 = M_PI;
    const real W      = sqrt( 0.25*NEWTON_G*M_ext/R_ext )/R_ext;

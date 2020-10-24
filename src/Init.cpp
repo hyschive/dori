@@ -207,6 +207,10 @@ void Init_Particles( const double INIT_T )
 // set particle initial condition manually
    else if ( INIT_METHOD == INIT_FUNC )
    {
+// ===================================================================
+//    set the initial condition of this binary system
+//    --> only need to set a single star here since the other will be represented by external gravity
+// ===================================================================
       Mass[0]    = M_ext;
       Pos [0][0] = R_ext;
       Pos [0][1] = 0.0;
