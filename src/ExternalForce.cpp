@@ -1,6 +1,10 @@
 #include "Dori.h"
 
 
+real M_ext = 1.0;
+real R_ext = 1.0;
+
+
 
 //----------------------------------------------------------------------
 // Function    :  Ext_AddAccFromFunc
@@ -22,25 +26,39 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
 
 // example 1 : point mass at origin
 // ===================================================================
-   const real GM      = (real)0.25;
-   const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
-   real dr[3], r, GM_r3, Temp;
+   const real Theta0 = M_PI;
+   const real W      = sqrt( 0.25*NEWTON_G*M_ext/R_ext )/R_ext;
 
-#  pragma omp parallel for private( dr, r, GM_r3, Temp ) schedule( runtime )
+   real dv[3], dr[3], r, GM_r3, Temp;
+   real r_ext[3], v_ext[3], Theta;
+
+   Theta    = W*Time + Theta0;
+   r_ext[0] = R_ext*cos( Theta );
+   r_ext[1] = R_ext*sin( Theta );
+   r_ext[2] = 0.0;
+   v_ext[0] = -R_ext*W*sin( Theta );
+   v_ext[1] = +R_ext*W*cos( Theta );
+   v_ext[2] = 0.0;
+
+#  pragma omp parallel for private( dv, dr, r, GM_r3, Temp ) schedule( runtime )
    for (int p=0; p<NPar; p++)
    {
-      for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - Cen[d];
+      for (int d=0; d<3; d++)
+      {
+         dr[d] = r_ext[d] - MyPos[p][d];
+         dv[d] = v_ext[d] - MyVel[p][d];
+      }
 
       r     = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
-      GM_r3 = GM/(r*r*r);
+      GM_r3 = NEWTON_G*M_ext/(r*r*r);
 
-      for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
+      for (int d=0; d<3; d++)    MyAcc[p][d] += GM_r3*dr[d];
 
       if ( EXT_JERK )
       {
-         Temp = (real)3.0*( dr[0]*MyVel[p][0] + dr[1]*MyVel[p][1] + dr[2]*MyVel[p][2] )/(r*r);
+         Temp = -(real)3.0*( dr[0]*dv[0] + dr[1]*dv[1] + dr[2]*dv[2] )/(r*r);
 
-         for (int d=0; d<3; d++)    MyJerk[p][d] += -GM_r3*( MyVel[p][d] - Temp*dr[d] );
+         for (int d=0; d<3; d++)    MyJerk[p][d] += GM_r3*( dv[d] + Temp*dr[d] );
       }
    } // for (int p=0; p<NPar; p++)
 // ===================================================================

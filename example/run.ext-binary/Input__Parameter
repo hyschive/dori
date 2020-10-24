@@ -1,0 +1,37 @@
+1        TOTAL_N           # total number of particles
+1        NGPU              # number of processes (number of particles in each process (N) = TOTAL_N/NGPU)
+16       OMP_NTHREAD       # number of OpenMP threads (<=0:default [omp_get_max_threads])
+1.e-3    EPS               # soften length
+1.0      NEWTON_G          # gravitational constant (<=0.0: assume to be 1.0)
+0.13     ETA               # time-step factor
+0.01     INIT_ETA          # time-step factor at the first step
+1.2566370614359172e+01 END_T        # end time
+1000000  END_STEP          # end step
+-1       MAX_DT_POWER      # power of the maximum allowed time-step -> MAX_DT = 2^(MAX_DT_POWER)
+-15      MIN_DT_POWER      # power of the minimum allowed time-step -> MIN_DT = 2^(MIN_DT_POWER)
+0        CONST_INIT_DT     # enforce all particles to have the same initial time-step (0/1 -> off/on)
+0        BINARY_OUTPUT     # dump data in the binary form (0/1 -> off/on)
+0.1      OUTPUT_DT         # output data every OUTPUT_DT time interval             (<0 -> disable)
+1.0      ENERGY_DT         # get the total energy every ENERGY_DT time interval    (<0 -> disable)
+0.1      DT_DIAGNOSIS_DT   # diagose time-step every DT_DIAGNOSIS_DT time interval (<0 -> disable)
+0        RESTART           # restart (0/1 -> off/on) please set INIT_T/STEP/DUMP_ID/E properly
+2        INIT_METHOD       # initialization method : (1/2 -> file/function) ##file name is always INIT_CONDITION
+0.0      INIT_T            # initial time
+0        INIT_STEP         # initial step
+0        INIT_DUMP_ID      # initial dump id
+0.0      INIT_E            # initial total energy (useful only when RESTART == true)
+1        SPLIT_NMAX        # the maximum number of particles to be splitted
+-2       GPUID_SELECT      # GPU ID selection mode : (-2, -1, >=0 -> by CUDA, MPI rank, Input)
+2        GRAVITY_TYPE      # gravity type : (1/2/3 -> self/external/both)
+1        EXT_JERK          # add external jerk (0/1 -> off/on)
+2        EXT_METHOD        # external acceleration method : (1/2 -> file/function)
+128      EXT_SIZE[0]       # for EXT_METHOD = 1 : array size along x
+128      EXT_SIZE[1]       # for EXT_METHOD = 1 : array size along y
+128      EXT_SIZE[2]       # for EXT_METHOD = 1 : array size along z
+-9999.9  EXT_CEN[0]        # for EXT_METHOD = 1 : center coordinate x (-9999.9 -> default=0.5*EXT_SIZE[0]*EXT_DH)
+-9999.9  EXT_CEN[1]        # for EXT_METHOD = 1 : center coordinate y (-9999.9 -> default=0.5*EXT_SIZE[0]*EXT_DH)
+-9999.9  EXT_CEN[2]        # for EXT_METHOD = 1 : center coordinate z (-9999.9 -> default=0.5*EXT_SIZE[0]*EXT_DH)
+1.0      EXT_DH            # for EXT_METHOD = 1 : cell size
+-1       EXT_PAR_INT       # for EXT_METHOD = 1 : particle interpolation scheme (<0/1/2 -> default/CIC/TSC [TSC])
+-1       EXT_ACC_DER       # for EXT_METHOD = 1 : acceleration derivative scheme (<0/1/2 -> default/QUAD/QUAR [QUAR])
+

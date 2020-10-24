@@ -1,5 +1,8 @@
 #include "Dori.h"
 
+extern real M_ext;
+extern real R_ext;
+
 
 
 
@@ -204,22 +207,13 @@ void Init_Particles( const double INIT_T )
 // set particle initial condition manually
    else if ( INIT_METHOD == INIT_FUNC )
    {
-//    example : two particles orbiting each other
-      Mass[0]    = 1.0;
-      Pos [0][0] = 1.0;
+      Mass[0]    = M_ext;
+      Pos [0][0] = R_ext;
       Pos [0][1] = 0.0;
       Pos [0][2] = 0.0;
       Vel [0][0] = 0.0;
-      Vel [0][1] = 0.5;
+      Vel [0][1] = sqrt( 0.25*NEWTON_G*M_ext/R_ext );
       Vel [0][2] = 0.0;
-
-      Mass[1]    = 1.0;
-      Pos [1][0] =-1.0;
-      Pos [1][1] = 0.0;
-      Pos [1][2] = 0.0;
-      Vel [1][0] = 0.0;
-      Vel [1][1] =-0.5;
-      Vel [1][2] = 0.0;
    } // else if ( INIT_METHOD == INIT_FUNC )
 
 
