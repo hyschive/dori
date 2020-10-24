@@ -16,9 +16,9 @@ reset
 # -----------------------------------------------------------
 FILE_IN_PREFIX  = 'Data'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__XXX'
+FILE_OUT_PREFIX = 'fig__ext_binary'
 START_ID        = 0
-END_ID          = 126
+END_ID          = 52
 DELTA_ID        = 1
 BINARY          = 0     # (0/1) = ASCII/BINARY
 PAUSE           = 0.1   # <= 0.0 --> mouse
@@ -28,8 +28,8 @@ FLOAT8          = 1     # (0/1) -> (single/double precision)
 
 # terminal
 # -----------------------------------------------------------
- set term x11 enhanced
-#set term png enhanced crop size 1280,800
+#set term x11 enhanced
+ set term png enhanced crop
 #set term postscript eps enhanced color 'Helvetica' 16
 
 

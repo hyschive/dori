@@ -1,0 +1,2 @@
+ffmpeg -framerate 10/1 -i fig__ext_binary_%06d.png -c:v libx264 -preset slow -tune animation \
+       -pix_fmt yuv420p -s 440x460 movie__ext_binary.mp4
