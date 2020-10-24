@@ -53,8 +53,10 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
       r     = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
       GM_r3 = NEWTON_G*M_ext/(r*r*r);
 
+//    add acceleration
       for (int d=0; d<3; d++)    MyAcc[p][d] += GM_r3*dr[d];
 
+//    add jerk (i.e., total time derivative of acceleration)
       if ( EXT_JERK )
       {
          Temp = -(real)3.0*( dr[0]*dv[0] + dr[1]*dv[1] + dr[2]*dv[2] )/(r*r);
