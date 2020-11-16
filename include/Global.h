@@ -71,6 +71,12 @@ extern int  L;    // length of the PlayerList
 extern int SPLIT_NMAX;
 
 
+// for star cluster heating
+extern double SOL_M22;
+extern double SOL_RCORE;
+extern double SOL_RSC;
+
+
 
 #endif // #ifndef __GLOBAL_VARIABLES_H__
 

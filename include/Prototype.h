@@ -100,6 +100,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
 void Ext_AddAccFromFile( const int NPar, const real (*MyPos)[3], const real (*MyVel)[3],
                          real (*MyAcc)[3], real (*MyJerk)[3], const double Time );
 void Ext_LoadExtAcc();
+void Ext_Init();
 
 
 

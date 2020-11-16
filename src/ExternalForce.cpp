@@ -2,10 +2,40 @@
 
 
 
-real g_M22   = 0.8;     // Boson mass [1e-22 eV]
-real g_Rcore = 6.5e-1;  // soliton core radius [kpc]
-real g_Rsc   = 1.3e-2;  // star cluster radius [kpc]
+double SOL_M22;      // Boson mass [1e-22 eV]
+double SOL_RCORE;    // soliton core radius [kpc]
+double SOL_RSC;      // star cluster radius [kpc]
 
+
+
+
+//----------------------------------------------------------------------
+// Function    :  Ext_Init
+// Description :  Initialize external acceleration
+//
+// Note        :  1. Invoked by Main()
+//
+// Parameter   :  None
+//
+// Return      :  None
+//----------------------------------------------------------------------
+void Ext_Init()
+{
+
+   if ( MyRank == 0 )    fprintf( stdout, "%s ...\n", __FUNCTION__ );
+
+
+   if ( MyRank == 0 )
+   {
+      Aux_Message( stdout, "   SOL_M22    = %13.7e\n", SOL_M22    );
+      Aux_Message( stdout, "   SOL_RCORE  = %13.7e\n", SOL_RCORE  );
+      Aux_Message( stdout, "   SOL_RSC    = %13.7e\n", SOL_RSC    );
+   }
+
+
+   if ( MyRank == 0 )    fprintf( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Ext_Init
 
 
 
@@ -75,7 +105,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
       for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - Cen[d];
 
       r     = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
-      GM_r3 = NEWTON_G*SolitonMass( r, g_M22, g_Rcore ) / CUBE(r);
+      GM_r3 = NEWTON_G*SolitonMass( r, SOL_M22, SOL_RCORE ) / CUBE(r);
 
       for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
 

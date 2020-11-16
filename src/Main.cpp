@@ -68,8 +68,12 @@ int main( int argc, char* argv[] )
 
    MemoryAllocate();
 
-   if (  ( GRAVITY_TYPE == GRAVITY_EXTERNAL || GRAVITY_TYPE == GRAVITY_BOTH )  &&  EXT_METHOD == EXT_FILE  )
-   Ext_LoadExtAcc();
+   if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )
+   {
+      Ext_Init();
+
+      if (  EXT_METHOD == EXT_FILE  )  Ext_LoadExtAcc();
+   }
 
    if ( MyRank == 0 )   TakeNote( INIT_T, END_T, INIT_STEP, END_STEP, ENERGY_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
                                   RESTART, INIT_E, INIT_DUMP_ID, BINARY_OUTPUT, CONST_INIT_DT, GPUID_SELECT );
