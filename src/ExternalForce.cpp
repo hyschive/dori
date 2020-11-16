@@ -2,6 +2,52 @@
 
 
 
+real g_M22   = 0.8;     // Boson mass [1e-22 eV]
+real g_Rcore = 6.5e-1;  // soliton core radius [kpc]
+real g_Rsc   = 1.3e-2;  // star cluster radius [kpc]
+
+
+
+
+//----------------------------------------------------------------------
+// Function    :  SolitonMass
+// Description :  Return the enclosed soliton mass
+//
+// Note        :  1. Invoked by Ext_AddAccFromFunc() and Init_Particles()
+//                2. See below for the assumed units
+//
+// Parameter   :  r   : Target radius       [kpc]
+//                m22 : Boson mass          [1e-22 eV]
+//                rc  : Soliton core radius [kpc]
+//
+// Return      :  Enclosed mass             [Msun]
+//----------------------------------------------------------------------
+real SolitonMass( const real r, const real m22, const real rc )
+{
+
+   real a1, a2, a3, a5, a7, a9, a11, a13, tmp, M;
+
+   a1  = SQRT(  POW( (real)2.0, (real)1.0/8.0 ) - (real)1.0  )*r/rc;
+   a2  = SQR( a1 );
+   a3  = a1 *a2;
+   a5  = a3 *a2;
+   a7  = a5 *a2;
+   a9  = a7 *a2;
+   a11 = a9 *a2;
+   a13 = a11*a2;
+   tmp = POW( ((real)1.0+a2), (real)7.0 );
+
+   M = (real)4.24e4 / ( SQR(m22)*rc*tmp ) *
+       (  - (real)3465.0*a1 + (real)48580.0*a3 + (real)92323.0*a5 + (real)101376.0*a7
+          + (real)65373.0*a9 + (real)23100.0*a11 + (real)3465.0*a13
+          + (real)3465.0*tmp*ATAN(a1)  );
+
+   return M;
+
+} // FUNCTION : SolitonMass
+
+
+
 //----------------------------------------------------------------------
 // Function    :  Ext_AddAccFromFunc
 // Description :  Add external acceleration from the analytical function
@@ -20,27 +66,28 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
                          real (*MyAcc)[3], real (*MyJerk)[3], const double Time )
 {
 
-// example 1 : point mass at origin
-// ===================================================================
-   const real GM      = (real)0.25;
    const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
-   real dr[3], r, GM_r3, Temp;
+   real dr[3], r, GM_r3;
 
-#  pragma omp parallel for private( dr, r, GM_r3, Temp ) schedule( runtime )
+#  pragma omp parallel for private( dr, r, GM_r3 ) schedule( runtime )
    for (int p=0; p<NPar; p++)
    {
       for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - Cen[d];
 
-      r     = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
-      GM_r3 = GM/(r*r*r);
+      r     = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
+      GM_r3 = NEWTON_G*SolitonMass( r, g_M22, g_Rcore ) / CUBE(r);
 
       for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
 
       if ( EXT_JERK )
       {
+         Aux_Error( ERROR_INFO, "EXT_JERK is not supported !!\n" );
+
+         /*
          Temp = (real)3.0*( dr[0]*MyVel[p][0] + dr[1]*MyVel[p][1] + dr[2]*MyVel[p][2] )/(r*r);
 
          for (int d=0; d<3; d++)    MyJerk[p][d] += -GM_r3*( MyVel[p][d] - Temp*dr[d] );
+         */
       }
    } // for (int p=0; p<NPar; p++)
 // ===================================================================

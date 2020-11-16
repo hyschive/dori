@@ -87,29 +87,29 @@
 // single/double-precision mathematic functions
 #ifdef FLOAT8
 #  define  SQRT( a )        sqrt( a )
+#  define   POW( a, b )      pow( a, b )
+#  define   SIN( a )         sin( a )
+#  define  ATAN( a )        atan( a )
 /*
 #  define  FABS( a )        fabs( a )
-#  define   SIN( a )         sin( a )
 #  define   COS( a )         cos( a )
 #  define   LOG( a )         log( a )
-#  define  ATAN( a )        atan( a )
 #  define  FMAX( a, b )     fmax( a, b )
 #  define  FMIN( a, b )     fmin( a, b )
-#  define   POW( a, b )      pow( a, b )
 #  define  FMOD( a, b )     fmod( a, b )
 #  define ATAN2( a, b )    atan2( a, b )
 */
 #else
 #  define  SQRT( a )        sqrtf( a )
+#  define   POW( a, b )      powf( a, b )
+#  define   SIN( a )         sinf( a )
+#  define  ATAN( a )        atanf( a )
 /*
 #  define  FABS( a )        fabsf( a )
-#  define   SIN( a )         sinf( a )
 #  define   COS( a )         cosf( a )
 #  define   LOG( a )         logf( a )
-#  define  ATAN( a )        atanf( a )
 #  define  FMAX( a, b )     fmaxf( a, b )
 #  define  FMIN( a, b )     fminf( a, b )
-#  define   POW( a, b )      powf( a, b )
 #  define  FMOD( a, b )     fmodf( a, b )
 #  define ATAN2( a, b )    atan2f( a, b )
 */

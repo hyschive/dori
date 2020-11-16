@@ -11,7 +11,7 @@ EXECUTABLE  := swim
 #######################################################################################################
 
 # GPU acceleration
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # use soften length in acceleration, jerk, and potential calculation
 SIMU_OPTION += -DSOFTEN
@@ -20,16 +20,16 @@ SIMU_OPTION += -DSOFTEN
 #SIMU_OPTION += -DIMPLICIT_HERMITE
 
 # improve the GPU performance if N is a multiple of BLOCK_SIZE
-SIMU_OPTION += -DN_IS_MULTIPLE_OF_BS
+#SIMU_OPTION += -DN_IS_MULTIPLE_OF_BS
 
 # use the HYBRID scheme (Harfst, 2007) for the force calculation (otherwise the RING scheme is adopted)
 #SIMU_OPTION += -DHYBRID_SCHEME
 
 # declare the accumulation arrays of acceleration, jerk, and potential as double precision
-#SIMU_OPTION += -DFLOAT8_ACC
+SIMU_OPTION += -DFLOAT8_ACC
 
 # declare all floating-point variables as double precision (must turn on FLOAT8_ACC as well)
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # shared time-step (otherwise the individual time-step is adopted)
 #SIMU_OPTION += -DSHARED_TIMESTEP
