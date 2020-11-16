@@ -76,6 +76,9 @@ extern double SOL_M22;
 extern double SOL_RCORE;
 extern double SOL_RSC;
 
+extern double SOL_DENS;
+extern double SOL_TSC;
+
 
 
 #endif // #ifndef __GLOBAL_VARIABLES_H__

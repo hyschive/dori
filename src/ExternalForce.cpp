@@ -2,9 +2,12 @@
 
 
 
-double SOL_M22;      // Boson mass [1e-22 eV]
-double SOL_RCORE;    // soliton core radius [kpc]
-double SOL_RSC;      // star cluster radius [kpc]
+double SOL_M22;      // Boson mass              [1e-22 eV]
+double SOL_RCORE;    // soliton core radius     [kpc]
+double SOL_RSC;      // star cluster radius     [kpc]
+
+double SOL_DENS;     // soliton peak density    [Msun/kpc^3]
+double SOL_TSC;      // star cluster time scale [Gyr]
 
 
 
@@ -25,11 +28,17 @@ void Ext_Init()
    if ( MyRank == 0 )    fprintf( stdout, "%s ...\n", __FUNCTION__ );
 
 
+   SOL_DENS = 1.9e7 / SQR(SOL_M22) / ( SQR(SOL_RCORE)*SQR(SOL_RCORE) );
+   SOL_TSC  = 1.45e-1 / sqrt( 1.0e-8*SOL_DENS );
+
+
    if ( MyRank == 0 )
    {
-      Aux_Message( stdout, "   SOL_M22    = %13.7e\n", SOL_M22    );
-      Aux_Message( stdout, "   SOL_RCORE  = %13.7e\n", SOL_RCORE  );
-      Aux_Message( stdout, "   SOL_RSC    = %13.7e\n", SOL_RSC    );
+      Aux_Message( stdout, "   SOL_M22    = %13.7e 1e-22 eV\n",   SOL_M22     );
+      Aux_Message( stdout, "   SOL_RCORE  = %13.7e kpc\n",        SOL_RCORE   );
+      Aux_Message( stdout, "   SOL_RSC    = %13.7e kpc\n",        SOL_RSC     );
+      Aux_Message( stdout, "   SOL_DENS   = %13.7e Msun/kpc^3\n", SOL_DENS    );
+      Aux_Message( stdout, "   SOL_TSC    = %13.7e Gyr\n",        SOL_TSC     );
    }
 
 
