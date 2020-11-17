@@ -5,6 +5,7 @@
 double SOL_M22;      // Boson mass [1e-22 eV]
 double SOL_RCORE;    // soliton core radius [kpc]
 double SOL_RSC;      // star cluster radius [kpc]
+double SOL_MSC;      // star cluster mass [Msun]
 double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
 double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
 
@@ -31,7 +32,7 @@ void Ext_Init()
 
 
    SOL_DENS = 1.9e7 / SQR(SOL_M22) / ( SQR(SOL_RCORE)*SQR(SOL_RCORE) );
-   SOL_TSC  = 1.45e-1 / sqrt( 1.0e-8*SOL_DENS );
+   SOL_TSC  = 1.45e-1 / sqrt(   1.0e-8*(  SOL_DENS + SOL_MSC*3.0/( 4.0*M_PI*CUBE(SOL_RSC) )  )   );
 
 
    if ( MyRank == 0 )
@@ -39,6 +40,7 @@ void Ext_Init()
       Aux_Message( stdout, "   SOL_M22       = %13.7e 1e-22 eV\n",   SOL_M22     );
       Aux_Message( stdout, "   SOL_RCORE     = %13.7e kpc\n",        SOL_RCORE   );
       Aux_Message( stdout, "   SOL_RSC       = %13.7e kpc\n",        SOL_RSC     );
+      Aux_Message( stdout, "   SOL_MSC       = %13.7e Msun\n",       SOL_MSC     );
       Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP );
       Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T   );
       Aux_Message( stdout, "\n" );
@@ -128,7 +130,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
       for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - Cen[d];
 
       r     = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
-      GM_r3 = NEWTON_G*SolitonMass( r, SOL_M22, OscRcore ) / CUBE(r);
+      GM_r3 = NEWTON_G*(  SolitonMass( r, SOL_M22, OscRcore ) + SOL_MSC  ) / CUBE(r);
 
       for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
 

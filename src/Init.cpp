@@ -213,7 +213,7 @@ void Init_Particles( const double INIT_T )
       Pos [0][1] = 0.0;
       Pos [0][2] = 0.0;
       Vel [0][0] = 0.0;
-      Vel [0][1] = SQRT(  NEWTON_G*SolitonMass( SOL_RSC, SOL_M22, SOL_RCORE )/SOL_RSC  );
+      Vel [0][1] = SQRT(   NEWTON_G*(  SolitonMass( SOL_RSC, SOL_M22, SOL_RCORE ) + SOL_MSC  )/SOL_RSC   );
       Vel [0][2] = 0.0;
    } // else if ( INIT_METHOD == INIT_FUNC )
 
@@ -416,6 +416,9 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_RSC,         string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_MSC,         string );
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_OSC_AMP,     string );
