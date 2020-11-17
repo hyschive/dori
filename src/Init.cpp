@@ -2,10 +2,6 @@
 
 
 
-real SolitonMass( const real r, const real m22, const real rc );
-
-
-
 
 //---------------------------------------------------------------------------
 // Function    :  Init_MPI
@@ -213,7 +209,7 @@ void Init_Particles( const double INIT_T )
       Pos [0][1] = 0.0;
       Pos [0][2] = 0.0;
       Vel [0][0] = 0.0;
-      Vel [0][1] = SQRT(   NEWTON_G*(  SolitonMass( SOL_RSC, SOL_M22, SOL_RCORE ) + SOL_MSC  )/SOL_RSC   );
+      Vel [0][1] = SQRT(  NEWTON_G*Ext_TotalEnclosedMass( SOL_RSC, INIT_T )/SOL_RSC  );
       Vel [0][2] = 0.0;
    } // else if ( INIT_METHOD == INIT_FUNC )
 

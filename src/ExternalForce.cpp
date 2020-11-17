@@ -13,6 +13,9 @@ double SOL_DENS;     // soliton peak density [Msun/kpc^3]
 double SOL_TSC;      // star cluster time scale [Gyr]
 
 
+static real Ext_SolitonMass( const real r, const real m22, const real rc );
+
+
 
 
 //----------------------------------------------------------------------
@@ -56,10 +59,43 @@ void Ext_Init()
 
 
 //----------------------------------------------------------------------
-// Function    :  SolitonMass
-// Description :  Return the enclosed soliton mass
+// Function    :  Ext_TotalEnclosedMass
+// Description :  Return the total enclosed mass from external sources
 //
 // Note        :  1. Invoked by Ext_AddAccFromFunc() and Init_Particles()
+//                2. See below for the assumed units
+//
+// Parameter   :  r : Target radius [kpc]
+//                t : Target time [Gyr]
+//
+// Return      :  Enclosed mass [Msun]
+//----------------------------------------------------------------------
+real Ext_TotalEnclosedMass( const double r, const double t )
+{
+
+   real OscPhase, OscRcore, M;
+
+   OscPhase = 2.0*M_PI/(SOL_TSC*SOL_OSC_T)*t;
+   OscRcore = SOL_RCORE*POW( 1.0 + SOL_OSC_AMP*SIN(OscPhase), (real)-0.25 );   // rho ~ r^{-4}
+   M        = Ext_SolitonMass( r, SOL_M22, OscRcore ) + SOL_MSC;
+
+   /*
+   FILE *file = fopen( "Rcore", "a" );
+   fprintf( file, "%13.7e   %13.7e\n", t, OscRcore );
+   fclose( file );
+   */
+
+   return M;
+
+} // FUNCTION : Ext_TotalEnclosedMass
+
+
+
+//----------------------------------------------------------------------
+// Function    :  Ext_SolitonMass
+// Description :  Return the enclosed soliton mass
+//
+// Note        :  1. Invoked by Ext_TotalEnclosedMass()
 //                2. See below for the assumed units
 //
 // Parameter   :  r   : Target radius       [kpc]
@@ -68,7 +104,7 @@ void Ext_Init()
 //
 // Return      :  Enclosed mass             [Msun]
 //----------------------------------------------------------------------
-real SolitonMass( const real r, const real m22, const real rc )
+real Ext_SolitonMass( const real r, const real m22, const real rc )
 {
 
    real a1, a2, a3, a5, a7, a9, a11, a13, tmp, M;
@@ -90,7 +126,7 @@ real SolitonMass( const real r, const real m22, const real rc )
 
    return M;
 
-} // FUNCTION : SolitonMass
+} // FUNCTION : Ext_SolitonMass
 
 
 
@@ -112,15 +148,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
                          real (*MyAcc)[3], real (*MyJerk)[3], const double Time )
 {
 
-   const real Cen[3]   = { (real)0.0, (real)0.0, (real)0.0 };
-   const real OscPhase = 2.0*M_PI/(SOL_TSC*SOL_OSC_T)*Time;
-   const real OscRcore = SOL_RCORE*POW( 1.0 + SOL_OSC_AMP*SIN(OscPhase), (real)-0.25 );   // rho ~ r^{-4}
-
-   /*
-   FILE *file = fopen( "Rcore", "a" );
-   fprintf( file, "%13.7e   %13.7e\n", Time, OscRcore );
-   fclose( file );
-   */
+   const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
    real dr[3], r, GM_r3;
 
@@ -130,7 +158,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
       for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - Cen[d];
 
       r     = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
-      GM_r3 = NEWTON_G*(  SolitonMass( r, SOL_M22, OscRcore ) + SOL_MSC  ) / CUBE(r);
+      GM_r3 = NEWTON_G * Ext_TotalEnclosedMass( r, Time ) / CUBE(r);
 
       for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
 
