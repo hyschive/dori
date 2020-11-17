@@ -204,7 +204,7 @@ void Init_Particles( const double INIT_T )
 // set particle initial condition manually
    else if ( INIT_METHOD == INIT_FUNC )
    {
-      Mass[0]    = 0.0;    // massless (doesn't matter since self-gravity is disabled)
+      Mass[0]    = 1.0;       // represent a single star with 1 Msun
       Pos [0][0] = SOL_RSC;
       Pos [0][1] = 0.0;
       Pos [0][2] = 0.0;

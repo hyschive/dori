@@ -102,6 +102,7 @@ void Ext_AddAccFromFile( const int NPar, const real (*MyPos)[3], const real (*My
 void Ext_LoadExtAcc();
 void Ext_Init();
 real Ext_TotalEnclosedMass( const double r, const double t );
+real Ext_TotalPot( const double r, const double t );
 
 
 

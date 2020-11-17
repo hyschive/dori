@@ -307,7 +307,7 @@ void dt_diagnosis()
 // Function    :  Get_TotalEnergy
 // Description :  Calculate the sum of the kinematic and potential energy
 //
-// Note        :  External potential is NOT included
+// Note        :  Including external potential
 //----------------------------------------------------------------------
 void Get_TotalEnergy( bool UseInputEgy, real INIT_E )
 {
@@ -337,12 +337,34 @@ void Get_TotalEnergy( bool UseInputEgy, real INIT_E )
          KE_local += Mass[i]*( Vel[i][0]*Vel[i][0] + Vel[i][1]*Vel[i][1] + Vel[i][2]*Vel[i][2] );
       }
 
-
       MPI_Reduce( &PE_local, &PE, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
       MPI_Reduce( &KE_local, &KE, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
       KE *= 0.5;
       PE *= 0.5;  // because the potential energy has been double counted
+
+//    add external potential
+      if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )
+      {
+         const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
+
+         double PE_Ext       = 0.0;
+         double PE_Ext_local = 0.0;
+         real dr[3], r;
+
+         for (int i=0; i<N; i++)
+         {
+            for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - Cen[d];
+
+            r             = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
+            PE_Ext_local += Mass[i]*Ext_TotalPot( r, Global_Time );
+         }
+
+         MPI_Reduce( &PE_Ext_local, &PE_Ext, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+         PE += PE_Ext;
+
+      } // if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )
 
       TotalE = PE + KE;
 

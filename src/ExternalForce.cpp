@@ -14,6 +14,7 @@ double SOL_TSC;      // star cluster time scale [Gyr]
 
 
 static real Ext_SolitonMass( const real r, const real m22, const real rc );
+static real Ext_SolitonPot( const real r, const real m22, const real rc );
 
 
 
@@ -55,6 +56,72 @@ void Ext_Init()
    if ( MyRank == 0 )    fprintf( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Ext_Init
+
+
+
+//----------------------------------------------------------------------
+// Function    :  Ext_TotalPot
+// Description :  Return the total potential from external sources
+//
+// Note        :  1. Invoked by Get_TotalEnergy()
+//                2. See below for the assumed units
+//
+// Parameter   :  r : Target radius [kpc]
+//                t : Target time [Gyr]
+//
+// Return      :  External potential [kpc^2/Gyr^2]
+//----------------------------------------------------------------------
+real Ext_TotalPot( const double r, const double t )
+{
+
+   real OscPhase, OscRcore, ExtPot_Sol, ExtPot_SC, ExtPot_Tot;
+
+   OscPhase   = 2.0*M_PI/(SOL_TSC*SOL_OSC_T)*t;
+   OscRcore   = SOL_RCORE*POW( 1.0 + SOL_OSC_AMP*SIN(OscPhase), (real)-0.25 );   // rho ~ r^{-4}
+   ExtPot_Sol = Ext_SolitonPot( r, SOL_M22, OscRcore );
+   ExtPot_SC  = -NEWTON_G*SOL_MSC/r;
+   ExtPot_Tot = ExtPot_Sol + ExtPot_SC;
+
+   return ExtPot_Tot;
+
+} // FUNCTION : Ext_TotalPot
+
+
+
+//----------------------------------------------------------------------
+// Function    :  Ext_SolitonPot
+// Description :  Return the soliton potential at a given radius
+//
+// Note        :  1. Invoked by Ext_TotalPot()
+//                2. See below for the assumed units
+//
+// Parameter   :  r   : Target radius       [kpc]
+//                m22 : Boson mass          [1e-22 eV]
+//                rc  : Soliton core radius [kpc]
+//
+// Return      :  Potential [kpc^2/Gyr^2]
+//----------------------------------------------------------------------
+real Ext_SolitonPot( const real r, const real m22, const real rc )
+{
+
+   real a1, a2, a3, a5, a7, a9, a11, tmp, Pot;
+
+   a1  = SQRT(  POW( (real)2.0, (real)1.0/8.0 ) - (real)1.0  )*r/rc;
+   a2  = SQR( a1 );
+   a3  = a1 *a2;
+   a5  = a3 *a2;
+   a7  = a5 *a2;
+   a9  = a7 *a2;
+   a11 = a9 *a2;
+   tmp = POW( ((real)1.0+a2), (real)6.0 );
+
+   Pot = (real)-5.74e-2 / ( SQR(m22*rc)*a1*tmp ) *
+         (  + (real)11895.0*a1 + (real)36685.0*a3 + (real)55638.0*a5 + (real)45738.0*a7
+            + (real)19635.0*a9 + (real)3465.0*a11 + (real)3465.0*tmp*ATAN(a1)  );
+
+   return Pot;
+
+} // FUNCTION : Ext_SolitonPot
 
 
 
