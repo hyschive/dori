@@ -75,6 +75,8 @@ extern int SPLIT_NMAX;
 extern double SOL_M22;
 extern double SOL_RCORE;
 extern double SOL_RSC;
+extern double SOL_OSC_AMP;
+extern double SOL_OSC_T;
 
 extern double SOL_DENS;
 extern double SOL_TSC;

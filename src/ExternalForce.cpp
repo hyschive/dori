@@ -2,11 +2,13 @@
 
 
 
-double SOL_M22;      // Boson mass              [1e-22 eV]
-double SOL_RCORE;    // soliton core radius     [kpc]
-double SOL_RSC;      // star cluster radius     [kpc]
+double SOL_M22;      // Boson mass [1e-22 eV]
+double SOL_RCORE;    // soliton core radius [kpc]
+double SOL_RSC;      // star cluster radius [kpc]
+double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
+double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
 
-double SOL_DENS;     // soliton peak density    [Msun/kpc^3]
+double SOL_DENS;     // soliton peak density [Msun/kpc^3]
 double SOL_TSC;      // star cluster time scale [Gyr]
 
 
@@ -34,11 +36,14 @@ void Ext_Init()
 
    if ( MyRank == 0 )
    {
-      Aux_Message( stdout, "   SOL_M22    = %13.7e 1e-22 eV\n",   SOL_M22     );
-      Aux_Message( stdout, "   SOL_RCORE  = %13.7e kpc\n",        SOL_RCORE   );
-      Aux_Message( stdout, "   SOL_RSC    = %13.7e kpc\n",        SOL_RSC     );
-      Aux_Message( stdout, "   SOL_DENS   = %13.7e Msun/kpc^3\n", SOL_DENS    );
-      Aux_Message( stdout, "   SOL_TSC    = %13.7e Gyr\n",        SOL_TSC     );
+      Aux_Message( stdout, "   SOL_M22       = %13.7e 1e-22 eV\n",   SOL_M22     );
+      Aux_Message( stdout, "   SOL_RCORE     = %13.7e kpc\n",        SOL_RCORE   );
+      Aux_Message( stdout, "   SOL_RSC       = %13.7e kpc\n",        SOL_RSC     );
+      Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP );
+      Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T   );
+      Aux_Message( stdout, "\n" );
+      Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS    );
+      Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC     );
    }
 
 
@@ -105,7 +110,16 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
                          real (*MyAcc)[3], real (*MyJerk)[3], const double Time )
 {
 
-   const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
+   const real Cen[3]   = { (real)0.0, (real)0.0, (real)0.0 };
+   const real OscPhase = 2.0*M_PI/(SOL_TSC*SOL_OSC_T)*Time;
+   const real OscRcore = SOL_RCORE*POW( 1.0 + SOL_OSC_AMP*SIN(OscPhase), (real)-0.25 );   // rho ~ r^{-4}
+
+   /*
+   FILE *file = fopen( "Rcore", "a" );
+   fprintf( file, "%13.7e   %13.7e\n", Time, OscRcore );
+   fclose( file );
+   */
+
    real dr[3], r, GM_r3;
 
 #  pragma omp parallel for private( dr, r, GM_r3 ) schedule( runtime )
@@ -114,7 +128,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
       for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - Cen[d];
 
       r     = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
-      GM_r3 = NEWTON_G*SolitonMass( r, SOL_M22, SOL_RCORE ) / CUBE(r);
+      GM_r3 = NEWTON_G*SolitonMass( r, SOL_M22, OscRcore ) / CUBE(r);
 
       for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
 

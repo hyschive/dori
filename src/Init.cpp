@@ -417,6 +417,12 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_RSC,         string );
 
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_OSC_AMP,     string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_OSC_T,       string );
+
    fclose(File);
 
 
