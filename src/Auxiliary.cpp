@@ -593,6 +593,31 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
          MPI_Barrier( MPI_COMM_WORLD );
       } // for (int YourTurn=0; YourTurn<NGPU; YourTurn++)
 
+
+      if ( SOL_REC_DIS )
+      {
+         if ( N != 1 )     Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with N=1 !!\n" );
+         if ( NGPU != 1 )  Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with NGPU=1 !!\n" );
+
+         const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
+         const int  ParID  = 0;
+         real dr[3], r;
+
+         for (int d=0; d<3; d++)    dr[d] = Pos[ParID][d] - Cen[d];
+         r = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
+
+         const char FileName_Dis[] = "Record__Distance";
+         FILE *File_Dis = fopen( FileName_Dis, "a" );
+
+         if ( PreviousStep == -1 )  // first time of invocation
+            fprintf( File_Dis, "#%12s  %10s  %14s\n", "Global_Time", "Step", "Distance" );
+
+         fprintf( File_Dis, "%13.7e  %10ld  %14.7e\n", Global_Time, Step, r );
+
+         fclose( File_Dis );
+      } // if ( SOL_REC_DIS )
+
+
       if ( MyRank == 0 )    fprintf( stdout, "Dump data (DumpID = %d) ... done\n", DumpID );
 
       DumpID++;

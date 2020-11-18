@@ -8,6 +8,7 @@ double SOL_RSC;      // star cluster radius [kpc]
 double SOL_MSC;      // star cluster mass [Msun]
 double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
 double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
+bool   SOL_REC_DIS;  // record the particle distance (used together with OUTPUT_DT)
 
 double SOL_DENS;     // soliton peak density [Msun/kpc^3]
 double SOL_TSC;      // star cluster time scale [Gyr]
@@ -35,6 +36,14 @@ void Ext_Init()
    if ( MyRank == 0 )    fprintf( stdout, "%s ...\n", __FUNCTION__ );
 
 
+// check
+   if ( SOL_REC_DIS )
+   {
+      if ( TOTAL_N != 1 )  Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with TOTAL_N=1 !!\n" );
+      if ( NGPU    != 1 )  Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with NGPU=1 !!\n" );
+   }
+
+
    SOL_DENS = 1.9e7 / SQR(SOL_M22) / ( SQR(SOL_RCORE)*SQR(SOL_RCORE) );
    SOL_TSC  = 1.45e-1 / sqrt(   1.0e-8*(  SOL_DENS + SOL_MSC*3.0/( 4.0*M_PI*CUBE(SOL_RSC) )  )   );
 
@@ -47,6 +56,7 @@ void Ext_Init()
       Aux_Message( stdout, "   SOL_MSC       = %13.7e Msun\n",       SOL_MSC     );
       Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP );
       Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T   );
+      Aux_Message( stdout, "   SOL_REC_DIS   = %d\n",                SOL_REC_DIS );
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS    );
       Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC     );
