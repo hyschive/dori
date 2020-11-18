@@ -611,9 +611,9 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
          FILE *File_Dis = fopen( FileName_Dis, "a" );
 
          if ( PreviousStep == -1 )  // first time of invocation
-            fprintf( File_Dis, "#%12s  %10s  %14s\n", "Global_Time", "Step", "Distance" );
+            fprintf( File_Dis, "#%14s  %10s  %15s\n", "Time [Gyr]", "Step", "Distance [kpc]" );
 
-         fprintf( File_Dis, "%13.7e  %10ld  %14.7e\n", Global_Time, Step, r );
+         fprintf( File_Dis, "%15.7e  %10ld  %15.7e\n", Global_Time, Step, r );
 
          fclose( File_Dis );
       } // if ( SOL_REC_DIS )
