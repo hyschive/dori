@@ -4,6 +4,7 @@
 int              TOTAL_N, N, NGPU, OMP_NTHREAD;
 real             NEWTON_G, EPS_SQR, ETA, INIT_ETA;
 int              SPLIT_NMAX;
+long             LOG_STEP;
 
 OptGravityType_t GRAVITY_TYPE;
 OptInitMethod_t  INIT_METHOD;
@@ -110,7 +111,7 @@ int main( int argc, char* argv[] )
    while ( (Global_Time-END_T < -1.e-10) && (Step < END_STEP) )
    {
 
-      if ( (MyRank == 0) && (Step%1 == 0)  )
+      if ( (MyRank == 0) && (Step%LOG_STEP == 0) )
          printf( "Time : %20.14e -> %20.14e,   Step = %9ld -> %9ld,   dt = %20.14e\n",
                  Global_Time, Next_Global_Time, Step, Step+1, Next_Global_Time-Global_Time );
 

@@ -338,6 +338,9 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
    sscanf( input_line, "%lf%s",  &DT_DIAGNOSIS_DT, string );
 
    getline(&input_line, &len, File);
+   sscanf( input_line, "%ld%s",  &LOG_STEP,        string );
+
+   getline(&input_line, &len, File);
    sscanf( input_line, "%d%s",   &RESTART,         string );
 
    getline( &input_line, &len, File );

@@ -56,6 +56,7 @@ void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP
    fprintf( Note, "ENERGY_DT           =   %13.7e\n",    ENERGY_DT       );
    fprintf( Note, "MOMENTUM_DT         =   %13.7e\n",    MOMENTUM_DT     );
    fprintf( Note, "DT_DIAGNOSIS_DT     =   %13.7e\n",    DT_DIAGNOSIS_DT );
+   fprintf( Note, "LOG_STEP            =   %ld\n",       LOG_STEP        );
    fprintf( Note, "RESTART             =   %d\n",        RESTART         );
    fprintf( Note, "INIT_METHOD         =   %d\n",        INIT_METHOD     );
    fprintf( Note, "INIT_T              =   %20.14e\n",   INIT_T          );

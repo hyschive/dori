@@ -15,6 +15,7 @@
 1.0      ENERGY_DT         # get the total energy   every ENERGY_DT   time interval (<0 -> disable)
 1.0      MOMENTUM_DT       # get the total momentum every MOMENTUM_DT time interval (<0 -> disable)
 0.1      DT_DIAGNOSIS_DT   # diagose time-step every DT_DIAGNOSIS_DT time interval  (<0 -> disable)
+1000     LOG_STEP          # output log every LOG_STEP step
 0        RESTART           # restart (0/1 -> off/on) please set INIT_T/STEP/DUMP_ID/E properly
 1        INIT_METHOD       # initialization method : (1/2 -> file/function) ##file name is always INIT_CONDITION
 0.0      INIT_T            # initial time

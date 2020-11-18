@@ -14,6 +14,7 @@ extern real             ETA;
 extern real             INIT_ETA;
 extern double           MAX_DT;
 extern double           MIN_DT;
+extern long             LOG_STEP;
 
 extern OptGravityType_t GRAVITY_TYPE;
 extern OptInitMethod_t  INIT_METHOD;
