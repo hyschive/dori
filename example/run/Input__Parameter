@@ -11,15 +11,19 @@
 -15      MIN_DT_POWER      # power of the minimum allowed time-step -> MIN_DT = 2^(MIN_DT_POWER)
 0        CONST_INIT_DT     # enforce all particles to have the same initial time-step (0/1 -> off/on)
 1        BINARY_OUTPUT     # dump data in the binary form (0/1 -> off/on)
-1.0      OUTPUT_DT         # output data every OUTPUT_DT time interval             (<0 -> disable)
-1.0      ENERGY_DT         # get the total energy every ENERGY_DT time interval    (<0 -> disable)
-0.1      DT_DIAGNOSIS_DT   # diagose time-step every DT_DIAGNOSIS_DT time interval (<0 -> disable)
+1.0      OUTPUT_DT         # output data every OUTPUT_DT time interval              (<0 -> disable)
+1.0      ENERGY_DT         # get the total energy   every ENERGY_DT   time interval (<0 -> disable)
+1.0      MOMENTUM_DT       # get the total momentum every MOMENTUM_DT time interval (<0 -> disable)
+0.1      DT_DIAGNOSIS_DT   # diagose time-step every DT_DIAGNOSIS_DT time interval  (<0 -> disable)
 0        RESTART           # restart (0/1 -> off/on) please set INIT_T/STEP/DUMP_ID/E properly
 1        INIT_METHOD       # initialization method : (1/2 -> file/function) ##file name is always INIT_CONDITION
 0.0      INIT_T            # initial time
 0        INIT_STEP         # initial step
 0        INIT_DUMP_ID      # initial dump id
-0.0      INIT_E            # initial total energy (useful only when RESTART == true)
+0.0      INIT_E            # initial total energy           (useful only when RESTART == true)
+0.0      INIT_L[0]         # initial total angular momentum (useful only when RESTART == true)
+0.0      INIT_L[1]         #
+0.0      INIT_L[2]         #
 2048     SPLIT_NMAX        # the maximum number of particles to be splitted
 -2       GPUID_SELECT      # GPU ID selection mode : (-2, -1, >=0 -> by CUDA, MPI rank, Input)
 1        GRAVITY_TYPE      # gravity type : (1/2/3 -> self/external/both)

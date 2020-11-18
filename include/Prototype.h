@@ -5,16 +5,17 @@
 
 // Auxiliary.h
 void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP, const long int END_STEP,
-               const double ENERGY_DT, const double OUTPUT_DT, const double DT_DIAGNOSIS_DT,
-               const int RESTART, const real INIT_E, const int INIT_DUMP_ID, const bool BINARY_OUTPUT,
+               const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT, const double DT_DIAGNOSIS_DT,
+               const int RESTART, const real INIT_E, const real INIT_L[3], const int INIT_DUMP_ID, const bool BINARY_OUTPUT,
                const bool CONST_INIT_DT, const int GPUID_SELECT );
 void Get_TotalEnergy( bool UseInputEgy, real INIT_E );
+void Get_TotalMomentum( bool UseInputMom, real INIT_L[3] );
 void OutputData( const int Init_DumpID, const bool Binary_Output );
 void MemoryAllocate();
 void MemoryFree();
 void dt_diagnosis();
 void CheckParameter( const double INIT_T, const double END_T, const long int INIT_STEP, const long int END_STEP,
-                     const double OUTPUT_DT, const double ENERGY_DT );
+                     const double OUTPUT_DT, const double ENERGY_DT, const double MOMENTUM_DT );
 void GetCPUInfo( const char *FileName );
 void Aux_Message( FILE *Type, const char *Format, ... );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
@@ -73,13 +74,13 @@ void BeginHybrid_Acc_Jerk( const double Time, const real Pos_Pred[][3], const re
 
 // Init.h
 void Init_MPI( int argc, char *argv[] );
-void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Energy_t, double &Output_t,
-                     double &dt_diagnosis_t, const double ENERGY_DT, const double OUTPUT_DT,
+void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Energy_t, double &Momentum_t, double &Output_t,
+                     double &dt_diagnosis_t, const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT,
                      const double DT_DIAGNOSIS_DT, const bool CONST_INIT_DT );
 void Init_Particles( const double INIT_T );
 void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int &END_STEP,
-                    double &OUTPUT_DT, double &ENERGY_DT, double &DT_DIAGNOSIS_DT,
-                    int &RESTART, real &INIT_E, int &INIT_DUMP_ID, bool &BINARY_OUTPUT, bool &CONST_INIT_DT,
+                    double &OUTPUT_DT, double &ENERGY_DT, double &MOMENTUM_DT, double &DT_DIAGNOSIS_DT,
+                    int &RESTART, real &INIT_E, real INIT_L[3], int &INIT_DUMP_ID, bool &BINARY_OUTPUT, bool &CONST_INIT_DT,
                     int &GPUID_SELECT );
 #ifdef OPENMP
 void Init_OpenMP();

@@ -41,12 +41,14 @@ int main( int argc, char* argv[] )
    double   INIT_T, END_T;
    long int INIT_STEP, END_STEP;
    int      INIT_DUMP_ID, GPUID_SELECT;
-   double   OUTPUT_DT, ENERGY_DT, DT_DIAGNOSIS_DT;
+   double   OUTPUT_DT, ENERGY_DT, MOMENTUM_DT, DT_DIAGNOSIS_DT;
    int      RESTART;
-   real     INIT_E = (real)1.e10;
+   real     INIT_E    = (real)1.e10;
+   real     INIT_L[3] = { (real)1.e10, (real)1.e10, (real)1.e10 };
    bool     BINARY_OUTPUT, CONST_INIT_DT;
 
    double   Energy_t       = 0.0;
+   double   Momentum_t     = 0.0;
    double   Output_t       = 0.0;
    double   dt_diagnosis_t = 0.0;
 
@@ -56,14 +58,14 @@ int main( int argc, char* argv[] )
 // ======================================================================================================
    Init_MPI( argc, argv );
 
-   ReadParameter( INIT_T, END_T, INIT_STEP, END_STEP, OUTPUT_DT, ENERGY_DT, DT_DIAGNOSIS_DT, RESTART,
-                  INIT_E, INIT_DUMP_ID, BINARY_OUTPUT, CONST_INIT_DT, GPUID_SELECT );
+   ReadParameter( INIT_T, END_T, INIT_STEP, END_STEP, OUTPUT_DT, ENERGY_DT, MOMENTUM_DT, DT_DIAGNOSIS_DT, RESTART,
+                  INIT_E, INIT_L, INIT_DUMP_ID, BINARY_OUTPUT, CONST_INIT_DT, GPUID_SELECT );
 
 #  ifdef OPENMP
    Init_OpenMP();
 #  endif
 
-   if ( MyRank == 0 )   CheckParameter( INIT_T, END_T, INIT_STEP, END_STEP, OUTPUT_DT, ENERGY_DT );
+   if ( MyRank == 0 )   CheckParameter( INIT_T, END_T, INIT_STEP, END_STEP, OUTPUT_DT, ENERGY_DT, MOMENTUM_DT );
 
 
    MemoryAllocate();
@@ -75,8 +77,8 @@ int main( int argc, char* argv[] )
       if (  EXT_METHOD == EXT_FILE  )  Ext_LoadExtAcc();
    }
 
-   if ( MyRank == 0 )   TakeNote( INIT_T, END_T, INIT_STEP, END_STEP, ENERGY_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
-                                  RESTART, INIT_E, INIT_DUMP_ID, BINARY_OUTPUT, CONST_INIT_DT, GPUID_SELECT );
+   if ( MyRank == 0 )   TakeNote( INIT_T, END_T, INIT_STEP, END_STEP, ENERGY_DT, MOMENTUM_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
+                                  RESTART, INIT_E, INIT_L, INIT_DUMP_ID, BINARY_OUTPUT, CONST_INIT_DT, GPUID_SELECT );
 
 #  ifdef GPU
    CUAPI_SetDevice( GPUID_SELECT );
@@ -85,13 +87,15 @@ int main( int argc, char* argv[] )
 #  endif
 
    Init_Particles( INIT_T );
-   Init_t_dt_step( INIT_T, INIT_STEP, Energy_t, Output_t, dt_diagnosis_t, ENERGY_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
+   Init_t_dt_step( INIT_T, INIT_STEP, Energy_t, Momentum_t, Output_t, dt_diagnosis_t, ENERGY_DT, MOMENTUM_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
                    CONST_INIT_DT );
 
    Get_Next_Global_Time();
 
 
    if ( ENERGY_DT >= 0.0 )    Get_TotalEnergy( RESTART, INIT_E );
+
+   if ( MOMENTUM_DT >= 0.0 )  Get_TotalMomentum( RESTART, INIT_L );
 
    // do not output the initial condition when doing Restart
    if ( OUTPUT_DT >= 0.0 && !RESTART )    OutputData( INIT_DUMP_ID, BINARY_OUTPUT );
@@ -133,6 +137,13 @@ int main( int argc, char* argv[] )
          Energy_t += ENERGY_DT;
       }
 
+      if ( MOMENTUM_DT >= 0.0  &&  Global_Time >= Momentum_t )
+      {
+         Synchronize();
+         Get_TotalMomentum( false, NULL );
+         Momentum_t += MOMENTUM_DT;
+      }
+
       if ( OUTPUT_DT >= 0.0  &&  Global_Time >= Output_t )
       {
           Synchronize();
@@ -157,6 +168,8 @@ int main( int argc, char* argv[] )
 
 
    if ( ENERGY_DT >= 0.0 )    Get_TotalEnergy( false, 0.0 );
+
+   if ( MOMENTUM_DT >= 0.0 )  Get_TotalMomentum( false, NULL );
 
    if ( OUTPUT_DT >= 0.0 )    OutputData( INIT_DUMP_ID, BINARY_OUTPUT );
 

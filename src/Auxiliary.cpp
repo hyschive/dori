@@ -9,8 +9,8 @@
 // Description :  Record the simulation information
 //----------------------------------------------------------------------
 void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP, const long int END_STEP,
-               const double ENERGY_DT, const double OUTPUT_DT, const double DT_DIAGNOSIS_DT,
-               const int RESTART, const real INIT_E, const int INIT_DUMP_ID, const bool BINARY_OUTPUT,
+               const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT, const double DT_DIAGNOSIS_DT,
+               const int RESTART, const real INIT_E, const real INIT_L[3], const int INIT_DUMP_ID, const bool BINARY_OUTPUT,
                const bool CONST_INIT_DT, const int GPUID_SELECT )
 {
 
@@ -54,6 +54,7 @@ void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP
    fprintf( Note, "BINARY_OUTPUT       =   %d\n",        BINARY_OUTPUT   );
    fprintf( Note, "OUTPUT_DT           =   %13.7e\n",    OUTPUT_DT       );
    fprintf( Note, "ENERGY_DT           =   %13.7e\n",    ENERGY_DT       );
+   fprintf( Note, "MOMENTUM_DT         =   %13.7e\n",    MOMENTUM_DT     );
    fprintf( Note, "DT_DIAGNOSIS_DT     =   %13.7e\n",    DT_DIAGNOSIS_DT );
    fprintf( Note, "RESTART             =   %d\n",        RESTART         );
    fprintf( Note, "INIT_METHOD         =   %d\n",        INIT_METHOD     );
@@ -61,6 +62,9 @@ void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP
    fprintf( Note, "INIT_STEP           =   %ld\n",       INIT_STEP       );
    fprintf( Note, "INIT_DUMP_ID        =   %d\n",        INIT_DUMP_ID    );
    fprintf( Note, "INIT_E              =   %14.7e\n",    INIT_E          );
+   fprintf( Note, "INIT_L[0]           =   %14.7e\n",    INIT_L[0]       );
+   fprintf( Note, "INIT_L[1]           =   %14.7e\n",    INIT_L[1]       );
+   fprintf( Note, "INIT_L[2]           =   %14.7e\n",    INIT_L[2]       );
    fprintf( Note, "SPLIT_NMAX          =   %d\n",        SPLIT_NMAX      );
    fprintf( Note, "GPUID_SELECT        =   %d\n",        GPUID_SELECT    );
    fprintf( Note, "GRAVITY_TYPE        =   %d\n",        GRAVITY_TYPE    );
@@ -400,6 +404,85 @@ void Get_TotalEnergy( bool UseInputEgy, real INIT_E )
 
 
 //----------------------------------------------------------------------
+// Function    :  Get_TotalMomentum
+// Description :  Calculate the total linear and angular momenta
+//
+// Note        :  1. Invoked by main()
+//                2. Only compute angular momentum for now
+//
+// Parameter   :  UseInputMom : Use the input INIT_L to estimate errors
+//                INIT_L      : Use by UseInputMom
+//----------------------------------------------------------------------
+void Get_TotalMomentum( bool UseInputMom, real INIT_L[3] )
+{
+
+   const char FileName[] = "Record__Momentum";
+
+   static double   MomL_Init[3] = { 0.0, 0.0, 0.0 };
+   static long int PreviousStep = -1;
+
+
+   if ( Step != PreviousStep )
+   {
+      if ( MyRank == 0 )    fprintf( stdout, "Record total momentum ... " );
+
+
+      const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
+
+      double MomL[3]       = { 0.0, 0.0, 0.0 };
+      double MomL_local[3] = { 0.0, 0.0, 0.0 };
+
+      for (int i=0; i<N; i++)
+      {
+         real dr[3];
+         for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - Cen[d];
+
+         MomL_local[0] += dr[1]*Vel[i][2] - dr[2]*Vel[i][1];
+         MomL_local[1] += dr[2]*Vel[i][0] - dr[0]*Vel[i][2];
+         MomL_local[2] += dr[0]*Vel[i][1] - dr[1]*Vel[i][0];
+      }
+
+      MPI_Reduce( MomL_local, MomL, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+
+      if ( PreviousStep == -1 )  // first time of invocation
+      {
+         for (int d=0; d<3; d++)
+         {
+            if ( UseInputMom )   MomL_Init[d] = INIT_L[d];
+            else                 MomL_Init[d] = MomL  [d];
+         }
+      }
+
+      if ( MyRank == 0 )
+      {
+         FILE *File = fopen( FileName, "a" );
+
+         if ( PreviousStep == -1 )  // first time of invocation
+            fprintf( File, "#%12s  %10s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s  %14s\n",
+                     "Global_Time", "Step", "MomL_x", "Abs Err", "Rel Err",
+                                            "MomL_y", "Abs Err", "Rel Err",
+                                            "MomL_z", "Abs Err", "Rel Err" );
+
+         fprintf( File, "%13.7e  %10ld  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e\n",
+                  Global_Time, Step, MomL[0], MomL[0]-MomL_Init[0], (MomL[0]-MomL_Init[0])/MomL_Init[0],
+                                     MomL[1], MomL[1]-MomL_Init[1], (MomL[1]-MomL_Init[1])/MomL_Init[1],
+                                     MomL[2], MomL[2]-MomL_Init[2], (MomL[2]-MomL_Init[2])/MomL_Init[2] );
+
+         fclose( File );
+      }
+
+      PreviousStep = Step;
+
+
+      if ( MyRank == 0 )    fprintf( stdout, "done\n" );
+   } // if ( Step != PreviousStep )
+
+} // FUNCTION : Get_TotalMomentum
+
+
+
+//----------------------------------------------------------------------
 // Function    :  OutputData
 // Description :  Dump the mass, position, and velocity to file
 //----------------------------------------------------------------------
@@ -661,7 +744,7 @@ void MemoryFree()
 // Description :  Verify some parameters loaded from the file "Input__Parameter"
 //----------------------------------------------------------------------
 void CheckParameter( const double INIT_T, const double END_T, const long int INIT_STEP, const long int END_STEP,
-                     const double OUTPUT_DT, const double ENERGY_DT )
+                     const double OUTPUT_DT, const double ENERGY_DT, const double MOMENTUM_DT )
 {
 
    if ( MyRank == 0 )   printf( "Check parameter ...\n" );
@@ -799,6 +882,13 @@ void CheckParameter( const double INIT_T, const double END_T, const long int INI
    {
       fprintf( stderr, "WARNING : setting ENERGY_DT (%20.14e) < MAX_DT (%20.14e) will introduce extra\n",
                ENERGY_DT, MAX_DT );
+      fprintf( stderr, "          synchronization and hence deteriorate the overall performance !!\n" );
+   }
+
+   if ( MOMENTUM_DT >= 0.0  &&  MOMENTUM_DT < MAX_DT )
+   {
+      fprintf( stderr, "WARNING : setting MOMENTUM_DT (%20.14e) < MAX_DT (%20.14e) will introduce extra\n",
+               MOMENTUM_DT, MAX_DT );
       fprintf( stderr, "          synchronization and hence deteriorate the overall performance !!\n" );
    }
 #  endif
