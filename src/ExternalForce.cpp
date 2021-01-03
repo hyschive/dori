@@ -19,7 +19,6 @@ double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
 double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
 bool   SOL_REC_DIS;  // record the particle distance (used together with OUTPUT_DT)
 
-double SOL_DENS;     // soliton peak density [Msun/kpc^3]
 double SOL_TSC;      // star cluster time scale [Gyr]
 
 
@@ -53,8 +52,10 @@ void Ext_Init()
    }
 
 
-   SOL_DENS = 1.9e7 / SQR(SOL_M22) / ( SQR(SOL_RCORE)*SQR(SOL_RCORE) );
-   SOL_TSC  = 1.45e-1 / sqrt(   1.0e-8*(  SOL_DENS + SOL_MSC*3.0/( 4.0*M_PI*CUBE(SOL_RSC) )  )   );
+   double SOL_DENS;  // soliton peak density [Msun/kpc^3]
+
+   SOL_DENS = 1.945e7 / SQR(SOL_M22) / ( SQR(SOL_RCORE)*SQR(SOL_RCORE) );
+   SOL_TSC  = sqrt(  4.0 * SQR(M_PI) * CUBE(SOL_RSC) / ( NEWTON_G*Ext_TotalEnclosedMass(SOL_RSC,0.0) )  );
 
 
    if ( MyRank == 0 )
