@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cmath>
 #include <mpi.h>
+#include <unistd.h>
 #ifdef OPENMP
 #  include <omp.h>
 #endif

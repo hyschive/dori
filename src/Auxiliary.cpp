@@ -541,25 +541,84 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
                   }
 
                   File = fopen( FileName[0], "wb" );
+
+//                set file to the target size for BORDER_VP
+                  if ( BINARY_ORDER == BORDER_VP )    ftruncate( fileno(File), TOTAL_N*7*sizeof(real) );
+
+                  fclose( File );
                }
-               else
+
+               if      ( BINARY_ORDER == BORDER_PV )
+               {
                   File = fopen( FileName[0], "ab" );
 
-               for (int i=0; i<N ; i++)
+                  for (int i=0; i<N ; i++)
+                  {
+                     fwrite( &Mass[i],   sizeof(real), 1, File );
+
+                     fwrite( &Pos[i][0], sizeof(real), 1, File );
+                     fwrite( &Pos[i][1], sizeof(real), 1, File );
+                     fwrite( &Pos[i][2], sizeof(real), 1, File );
+
+                     fwrite( &Vel[i][0], sizeof(real), 1, File );
+                     fwrite( &Vel[i][1], sizeof(real), 1, File );
+                     fwrite( &Vel[i][2], sizeof(real), 1, File );
+                  }
+               } // if ( BINARY_ORDER == BORDER_PV )
+
+               else if ( BINARY_ORDER == BORDER_VP )
                {
-                  fwrite( &Mass[i],   sizeof(real), 1, File );
+//                use "rb+" to avoid deleting the content of the file
+                  File = fopen( FileName[0], "rb+" );
 
-                  fwrite( &Pos[i][0], sizeof(real), 1, File );
-                  fwrite( &Pos[i][1], sizeof(real), 1, File );
-                  fwrite( &Pos[i][2], sizeof(real), 1, File );
+                  const long offset_v =  TOTAL_N*sizeof(real);
+                  const long offset_p = MyRank*N*sizeof(real);
 
-                  fwrite( &Vel[i][0], sizeof(real), 1, File );
-                  fwrite( &Vel[i][1], sizeof(real), 1, File );
-                  fwrite( &Vel[i][2], sizeof(real), 1, File );
-               }
+                  real *OneAtt = new real [N];
+
+//                mass
+                  for (int i=0; i<N; i++)    OneAtt[i] = Mass[i];
+                  fseek( File, 0*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+//                x
+                  for (int i=0; i<N; i++)    OneAtt[i] = Pos [i][0];
+                  fseek( File, 1*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+//                y
+                  for (int i=0; i<N; i++)    OneAtt[i] = Pos [i][1];
+                  fseek( File, 2*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+//                z
+                  for (int i=0; i<N; i++)    OneAtt[i] = Pos [i][2];
+                  fseek( File, 3*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+//                vx
+                  for (int i=0; i<N; i++)    OneAtt[i] = Vel [i][0];
+                  fseek( File, 4*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+//                vy
+                  for (int i=0; i<N; i++)    OneAtt[i] = Vel [i][1];
+                  fseek( File, 5*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+//                vz
+                  for (int i=0; i<N; i++)    OneAtt[i] = Vel [i][2];
+                  fseek( File, 6*offset_v + offset_p, SEEK_SET );
+                  fwrite( OneAtt, sizeof(real), N, File );
+
+                  delete [] OneAtt;
+               } // else if ( BINARY_ORDER == BORDER_VP )
+
+               else
+                  Aux_Error( ERROR_INFO, "unsupported BINARY_ORDER (%d) !!\n", BINARY_ORDER );
 
                fclose( File );
-            }
+            } // if ( Binary_Output )
 
             else
             {
@@ -588,12 +647,50 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
                }
 
                fclose(File);
-            } // if ( Binary_Output )
+            } // if ( Binary_Output ) ... else ...
 
          } // if ( MyRank == YourTurn )
 
          MPI_Barrier( MPI_COMM_WORLD );
       } // for (int YourTurn=0; YourTurn<NGPU; YourTurn++)
+
+
+//    verify the file size
+      if ( Binary_Output  &&  MyRank == 0 )
+      {
+         long int ExpectSize, InputSize;
+
+         FILE *FileJustWrite = fopen( FileName[0], "rb" );
+
+         if ( FileJustWrite == NULL )
+         {
+            fprintf( stderr, "ERROR : the file \"%s\" does not exist !!\n", FileName[0] );
+            exit(-1);
+         }
+
+         fseek( FileJustWrite, 0, SEEK_END );
+
+         InputSize  = ftell( FileJustWrite );
+         ExpectSize = TOTAL_N*7*sizeof(real);
+
+         fclose( FileJustWrite );
+
+         if ( InputSize > ExpectSize )
+         {
+            fprintf( stderr, "WARNING : the size of the output file <%s> is too large !!\n", FileName[0] );
+            fprintf( stderr, "          Output = %ld bytes <-> Expect = %ld bytes ...\n", InputSize, ExpectSize );
+            fprintf( stderr, "          file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  __FUNCTION__  );
+            MPI_Exit();
+         }
+
+         if ( InputSize < ExpectSize )
+         {
+            fprintf( stderr, "ERROR : the size of the output file <%s> is too small !!\n", FileName[0] );
+            fprintf( stderr, "        Output = %ld bytes <-> Expect = %ld bytes ...\n", InputSize, ExpectSize );
+            fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  __FUNCTION__  );
+            MPI_Exit();
+         }
+      } // if ( MyRank == 0 )
 
 
       if ( SOL_REC_DIS )
