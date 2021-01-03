@@ -130,7 +130,6 @@ void Init_Particles( const double INIT_T )
 
    if ( INIT_METHOD == INIT_FILE )
    {
-      const int offset      = MyRank*N*7*sizeof(real);
       const char FileName[] = "INIT_CONDITION";
 
 //    verify the file size
@@ -178,21 +177,73 @@ void Init_Particles( const double INIT_T )
          {
             FILE *File = fopen( FileName, "rb" );
 
-//          properly set the file position indicator for each process
-            fseek( File, offset, SEEK_SET );
-
-            for (int i=0; i<N; i++)
+            if      ( BINARY_ORDER == BORDER_PV )
             {
-               fread( &Mass[i],   sizeof(real), 1, File );
+//             properly set the file position indicator for each process
+               const long offset = 7*MyRank*N*sizeof(real);
+               fseek( File, offset, SEEK_SET );
 
-               fread( &Pos[i][0], sizeof(real), 1, File );
-               fread( &Pos[i][1], sizeof(real), 1, File );
-               fread( &Pos[i][2], sizeof(real), 1, File );
+               for (int i=0; i<N; i++)
+               {
+                  fread( &Mass[i],   sizeof(real), 1, File );
 
-               fread( &Vel[i][0], sizeof(real), 1, File );
-               fread( &Vel[i][1], sizeof(real), 1, File );
-               fread( &Vel[i][2], sizeof(real), 1, File );
-            }
+                  fread( &Pos[i][0], sizeof(real), 1, File );
+                  fread( &Pos[i][1], sizeof(real), 1, File );
+                  fread( &Pos[i][2], sizeof(real), 1, File );
+
+                  fread( &Vel[i][0], sizeof(real), 1, File );
+                  fread( &Vel[i][1], sizeof(real), 1, File );
+                  fread( &Vel[i][2], sizeof(real), 1, File );
+               }
+            } // if ( BINARY_ORDER == BORDER_PV )
+
+            else if ( BINARY_ORDER == BORDER_VP )
+            {
+               const long offset_v =  TOTAL_N*sizeof(real);
+               const long offset_p = MyRank*N*sizeof(real);
+
+               real *OneAtt = new real [N];
+
+//             mass
+               fseek( File, 0*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Mass[i]    = OneAtt[i];
+
+//             x
+               fseek( File, 1*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Pos [i][0] = OneAtt[i];
+
+//             y
+               fseek( File, 2*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Pos [i][1] = OneAtt[i];
+
+//             z
+               fseek( File, 3*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Pos [i][2] = OneAtt[i];
+
+//             vx
+               fseek( File, 4*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Vel [i][0] = OneAtt[i];
+
+//             vy
+               fseek( File, 5*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Vel [i][1] = OneAtt[i];
+
+//             vz
+               fseek( File, 6*offset_v + offset_p, SEEK_SET );
+               fread( OneAtt, sizeof(real), N, File );
+               for (int i=0; i<N; i++)    Vel [i][2] = OneAtt[i];
+
+               delete [] OneAtt;
+            } // else if ( BINARY_ORDER == BORDER_VP )
+
+            else
+               Aux_Error( ERROR_INFO, "unsupported BINARY_ORDER (%d) !!\n", BINARY_ORDER );
 
             fclose(File);
          } // if ( MyRank == YourTurn )
@@ -324,6 +375,10 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
    getline(&input_line, &len, File);
    sscanf( input_line, "%d%s",   &temp_int,        string );
    BINARY_OUTPUT = temp_int;
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,        string );
+   BINARY_ORDER = (OptBinaryOrder_t)temp_int;
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &OUTPUT_DT,       string );

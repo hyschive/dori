@@ -52,6 +52,7 @@ void TakeNote( const double INIT_T, const double END_T, const long int INIT_STEP
    fprintf( Note, "MIN_DT              =   %20.14e\n",   MIN_DT          );
    fprintf( Note, "CONST_INIT_DT       =   %d\n",        CONST_INIT_DT   );
    fprintf( Note, "BINARY_OUTPUT       =   %d\n",        BINARY_OUTPUT   );
+   fprintf( Note, "BINARY_ORDER        =   %d\n",        BINARY_ORDER    );
    fprintf( Note, "OUTPUT_DT           =   %13.7e\n",    OUTPUT_DT       );
    fprintf( Note, "ENERGY_DT           =   %13.7e\n",    ENERGY_DT       );
    fprintf( Note, "MOMENTUM_DT         =   %13.7e\n",    MOMENTUM_DT     );
@@ -858,6 +859,9 @@ void CheckParameter( const double INIT_T, const double END_T, const long int INI
       fprintf( stderr, "ERROR : INIT_STEP (%ld) > END_STEP (%ld) !!\n", INIT_STEP, END_STEP );
       exit(-1);
    }
+
+   if ( BINARY_ORDER != BORDER_PV  &&  BINARY_ORDER != BORDER_VP )
+      Aux_Error( ERROR_INFO, "unsupported BINARY_ORDER (%d) !!\n", BINARY_ORDER );
 
    if ( GRAVITY_TYPE != GRAVITY_SELF  &&  GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  GRAVITY_TYPE != GRAVITY_BOTH )
       Aux_Error( ERROR_INFO, "unsupported GRAVITY_TYPE (%d) !!\n", GRAVITY_TYPE );

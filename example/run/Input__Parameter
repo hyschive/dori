@@ -11,6 +11,7 @@
 -15      MIN_DT_POWER      # power of the minimum allowed time-step -> MIN_DT = 2^(MIN_DT_POWER)
 0        CONST_INIT_DT     # enforce all particles to have the same initial time-step (0/1 -> off/on)
 1        BINARY_OUTPUT     # dump data in the binary form (0/1 -> off/on)
+1        BINARY_ORDER      # binary data format for both BINARY_OUTPUT and INIT_METHOD=1 (1/2 -> id-v/v-id)
 1.0      OUTPUT_DT         # output data every OUTPUT_DT time interval              (<0 -> disable)
 1.0      ENERGY_DT         # get the total energy   every ENERGY_DT   time interval (<0 -> disable)
 1.0      MOMENTUM_DT       # get the total momentum every MOMENTUM_DT time interval (<0 -> disable)

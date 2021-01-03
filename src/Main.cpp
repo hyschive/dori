@@ -8,6 +8,7 @@ long             LOG_STEP;
 
 OptGravityType_t GRAVITY_TYPE;
 OptInitMethod_t  INIT_METHOD;
+OptBinaryOrder_t BINARY_ORDER;
 OptExtMethod_t   EXT_METHOD;
 OptExtParInt_t   EXT_PAR_INT;
 OptExtAccDer_t   EXT_ACC_DER;

@@ -28,6 +28,9 @@ typedef float  real;
 // program initialization
 enum OptInitMethod_t { INIT_FILE=1, INIT_FUNC=2 };
 
+// binary file format
+enum OptBinaryOrder_t { BORDER_PV=1, BORDER_VP=2 };
+
 // gravity types
 enum OptGravityType_t { GRAVITY_SELF=1, GRAVITY_EXTERNAL=2, GRAVITY_BOTH=3 };
 

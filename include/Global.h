@@ -18,6 +18,7 @@ extern long             LOG_STEP;
 
 extern OptGravityType_t GRAVITY_TYPE;
 extern OptInitMethod_t  INIT_METHOD;
+extern OptBinaryOrder_t BINARY_ORDER;
 extern OptExtMethod_t   EXT_METHOD;
 extern OptExtParInt_t   EXT_PAR_INT;
 extern OptExtAccDer_t   EXT_ACC_DER;
