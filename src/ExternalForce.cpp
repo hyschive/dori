@@ -2,6 +2,15 @@
 
 
 
+#define FORM_ACCURATE   1     // include more decimal digits
+#define FORM_PAPER      2     // fully consistent with the density profile on the paper (with a single decimal digit)
+#define SOLITON_FORM    FORM_PAPER
+
+#if ( SOLITON_FORM != FORM_ACCURATE  &&  SOLITON_FORM != FORM_PAPER )
+#   error : unsupported SOLITON_FORM !!
+#endif
+
+
 double SOL_M22;      // Boson mass [1e-22 eV]
 double SOL_RCORE;    // soliton core radius [kpc]
 double SOL_RSC;      // star cluster radius [kpc]
@@ -186,7 +195,11 @@ real Ext_SolitonMass( const real r, const real m22, const real rc )
 
    real a1, a2, a3, a5, a7, a9, a11, a13, tmp, M;
 
+#  if   ( SOLITON_FORM == FORM_ACCURATE )
    a1  = SQRT(  POW( (real)2.0, (real)1.0/8.0 ) - (real)1.0  )*r/rc;
+#  elif ( SOLITON_FORM == FORM_PAPER )
+   a1  = SQRT( 9.1e-2 )*r/rc;
+#  endif
    a2  = SQR( a1 );
    a3  = a1 *a2;
    a5  = a3 *a2;
@@ -196,7 +209,11 @@ real Ext_SolitonMass( const real r, const real m22, const real rc )
    a13 = a11*a2;
    tmp = POW( ((real)1.0+a2), (real)7.0 );
 
-   M = (real)4.24e4 / ( SQR(m22)*rc*tmp ) *
+#  if   ( SOLITON_FORM == FORM_ACCURATE )
+   M = (real)4.24e4        / ( SQR(m22)*rc*tmp ) *
+#  elif ( SOLITON_FORM == FORM_PAPER )
+   M = (real)4.044660978e4 / ( SQR(m22)*rc*tmp ) *
+#  endif
        (  - (real)3465.0*a1 + (real)48580.0*a3 + (real)92323.0*a5 + (real)101376.0*a7
           + (real)65373.0*a9 + (real)23100.0*a11 + (real)3465.0*a13
           + (real)3465.0*tmp*ATAN(a1)  );
