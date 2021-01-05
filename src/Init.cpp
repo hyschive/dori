@@ -154,10 +154,10 @@ void Init_Particles( const double INIT_T )
 
          if ( InputSize > ExpectSize )
          {
-            fprintf( stderr, "WARNING : the size of the input file <%s> is too large !!\n", FileName );
-            fprintf( stderr, "          Input = %ld bytes <-> Expect = %ld bytes ...\n", InputSize, ExpectSize );
-            fprintf( stderr, "          --> The extra data in the file will NOT be loaded ...\n" );
-            fprintf( stderr, "          file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  __FUNCTION__  );
+            fprintf( stderr, "ERROR : the size of the input file <%s> is too large !!\n", FileName );
+            fprintf( stderr, "        Input = %ld bytes <-> Expect = %ld bytes ...\n", InputSize, ExpectSize );
+            fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  __FUNCTION__  );
+            MPI_Exit();
          }
 
          if ( InputSize < ExpectSize )
