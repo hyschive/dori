@@ -782,11 +782,11 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
                fprintf( File_HLR, "# Time   unit : Gyr\n" );
                fprintf( File_HLR, "# Length unit : kpc\n" );
                fprintf( File_HLR, "\n" );
-               fprintf( File_HLR, "#%12s  %10s  %13s  %13s  %13s  %13s\n",
+               fprintf( File_HLR, "#%12s  %10s  %13s  %14s  %14s  %14s\n",
                         "Time", "Step", "HLR", "CM[x]", "CM[y]", "CM[z]" );
             }
 
-            fprintf( File_HLR, "%13.7e  %10ld  %13.7e  %13.7e  %13.7e  %13.7e\n",
+            fprintf( File_HLR, "%13.7e  %10ld  %13.7e  %14.7e  %14.7e  %14.7e\n",
                      Global_Time, Step, HLR, CM[0], CM[1], CM[2] );
 
             fclose( File_HLR );
