@@ -42,6 +42,9 @@
 -1       EXT_ACC_DER       # for EXT_METHOD = 1 : acceleration derivative scheme (<0/1/2 -> default/QUAD/QUAR [QUAR])
 0.8      SOL_M22           # Boson mass [1e-22 eV]
 6.5e-1   SOL_RCORE         # soliton core radius [kpc]
+0.5      SOL_CEN_X         # soliton center x/y/z [kpc]
+0.5      SOL_CEN_Y         # ...
+0.5      SOL_CEN_Z         # ...
 1.3e-2   SOL_RSC           # star cluster radius [kpc]
 2.0e3    SOL_MSC           # star cluster mass [Msun]
 0.3      SOL_OSC_AMP       # soliton oscillation amplitude (compared to SOL_DENS)

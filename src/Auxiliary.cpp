@@ -352,15 +352,13 @@ void Get_TotalEnergy( bool UseInputEgy, real INIT_E )
 //    add external potential
       if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )
       {
-         const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
-
          double PE_Ext       = 0.0;
          double PE_Ext_local = 0.0;
          real dr[3], r;
 
          for (int i=0; i<N; i++)
          {
-            for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - Cen[d];
+            for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - SOL_CEN[d];
 
             r             = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
             PE_Ext_local += Mass[i]*Ext_TotalPot( r, Global_Time );
@@ -429,15 +427,13 @@ void Get_TotalMomentum( bool UseInputMom, real INIT_L[3] )
       if ( MyRank == 0 )    fprintf( stdout, "Record total momentum ... " );
 
 
-      const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
-
       double MomL[3]       = { 0.0, 0.0, 0.0 };
       double MomL_local[3] = { 0.0, 0.0, 0.0 };
 
       for (int i=0; i<N; i++)
       {
          real dr[3];
-         for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - Cen[d];
+         for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - SOL_CEN[d];
 
          MomL_local[0] += dr[1]*Vel[i][2] - dr[2]*Vel[i][1];
          MomL_local[1] += dr[2]*Vel[i][0] - dr[0]*Vel[i][2];
@@ -698,11 +694,10 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
          if ( N != 1 )     Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with N=1 !!\n" );
          if ( NGPU != 1 )  Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with NGPU=1 !!\n" );
 
-         const real Cen[3] = { (real)0.0, (real)0.0, (real)0.0 };
-         const int  ParID  = 0;
+         const int  ParID = 0;
          real dr[3], r;
 
-         for (int d=0; d<3; d++)    dr[d] = Pos[ParID][d] - Cen[d];
+         for (int d=0; d<3; d++)    dr[d] = Pos[ParID][d] - SOL_CEN[d];
          r = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
 
          const char FileName_Dis[] = "Record__Distance";

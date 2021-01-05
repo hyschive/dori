@@ -76,6 +76,7 @@ extern int SPLIT_NMAX;
 // for star cluster heating
 extern double SOL_M22;
 extern double SOL_RCORE;
+extern double SOL_CEN[3];
 extern double SOL_RSC;
 extern double SOL_MSC;
 extern double SOL_OSC_AMP;

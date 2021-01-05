@@ -257,9 +257,9 @@ void Init_Particles( const double INIT_T )
    else if ( INIT_METHOD == INIT_FUNC )
    {
       Mass[0]    = 1.0;       // represent a single star with 1 Msun
-      Pos [0][0] = SOL_RSC;
-      Pos [0][1] = 0.0;
-      Pos [0][2] = 0.0;
+      Pos [0][0] = SOL_CEN[0] + SOL_RSC;
+      Pos [0][1] = SOL_CEN[1];
+      Pos [0][2] = SOL_CEN[2];
       Vel [0][0] = 0.0;
       Vel [0][1] = SQRT(  NEWTON_G*Ext_TotalEnclosedMass( SOL_RSC, INIT_T )/SOL_RSC  );
       Vel [0][2] = 0.0;
@@ -489,6 +489,15 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_RCORE,       string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_CEN[0],      string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_CEN[1],      string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_CEN[2],      string );
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_RSC,         string );
