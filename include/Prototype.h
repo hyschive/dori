@@ -23,6 +23,7 @@ void MPI_Exit();
 bool Aux_CheckFileExist( const char *FileName );
 int Aux_IsFinite( const float x );
 int Aux_IsFinite( const double x );
+template <typename T> void  Mis_Heapsort( const int N, T Array[], int IdxTable[] );
 
 
 // CUDA_API.h

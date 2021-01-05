@@ -552,7 +552,7 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
                {
                   File = fopen( FileName[0], "ab" );
 
-                  for (int i=0; i<N ; i++)
+                  for (int i=0; i<N; i++)
                   {
                      fwrite( &Mass[i],   sizeof(real), 1, File );
 
@@ -715,6 +715,91 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
 
          fclose( File_Dis );
       } // if ( SOL_REC_DIS )
+
+
+      if ( SOL_REC_HLR )
+      {
+//       collect all particles to the root rank
+         real (*MassAll)   = ( MyRank == 0 ) ? new real [TOTAL_N]    : NULL;
+         real (*PosAll)[3] = ( MyRank == 0 ) ? new real [TOTAL_N][3] : NULL;
+
+         MPI_Gather( Mass,    N,   GAMER_MPI_REAL,
+                     MassAll, N,   GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
+
+         MPI_Gather( Pos,     N*3, GAMER_MPI_REAL,
+                     PosAll,  N*3, GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
+
+
+         if ( MyRank == 0 )
+         {
+//          compute the center of mass
+            double TotalM=0.0, CM[3]={ 0.0, 0.0, 0.0 };
+
+            for (int i=0; i<TOTAL_N; i++)
+            {
+               TotalM += MassAll[i];
+
+               for (int d=0; d<3; d++)    CM[d] += MassAll[i]*PosAll[i][d];
+            }
+
+            for (int d=0; d<3; d++)    CM[d] /= TotalM;
+
+
+//          compute the half-light radius
+//          --> strictly speaking, we are computing the 2D half-mass radius (i.e., the radius where the 2D projected
+//              mass profile is half of the total mass)
+            double (*R2D) = new double [TOTAL_N];
+            int    (*Idx) = new int    [TOTAL_N];
+            double dx, dy, HLR, EnclosedMass=0.0;
+
+            for (int i=0; i<TOTAL_N; i++)
+            {
+//             project along the z direction
+               dx     = PosAll[i][0] - CM[0];
+               dy     = PosAll[i][1] - CM[1];
+               R2D[i] = sqrt( SQR(dx) + SQR(dy) );
+            }
+
+            Mis_Heapsort( TOTAL_N, R2D, Idx );
+
+            for (int i=0; i<TOTAL_N; i++)
+            {
+               EnclosedMass += MassAll[ Idx[i] ];
+
+               if ( EnclosedMass > 0.5*TotalM )
+               {
+                  HLR = R2D[i];
+                  break;
+               }
+            }
+
+            delete [] R2D;
+            delete [] Idx;
+
+
+//          output
+            const char FileName_HLR[] = "Record__HalfLightRadius";
+            FILE *File_HLR = fopen( FileName_HLR, "a" );
+
+            if ( PreviousStep == -1 )  // first time of invocation
+            {
+               fprintf( File_HLR, "# Total mass  : %13.7e Msun\n", TotalM );
+               fprintf( File_HLR, "# Time   unit : Gyr\n" );
+               fprintf( File_HLR, "# Length unit : kpc\n" );
+               fprintf( File_HLR, "\n" );
+               fprintf( File_HLR, "#%12s  %10s  %13s  %13s  %13s  %13s\n",
+                        "Time", "Step", "HLR", "CM[x]", "CM[y]", "CM[z]" );
+            }
+
+            fprintf( File_HLR, "%13.7e  %10ld  %13.7e  %13.7e  %13.7e  %13.7e\n",
+                     Global_Time, Step, HLR, CM[0], CM[1], CM[2] );
+
+            fclose( File_HLR );
+         } // if ( MyRank == 0 )
+
+         delete [] MassAll;
+         delete [] PosAll;
+      } // if ( SOL_REC_HLR )
 
 
       if ( MyRank == 0 )    fprintf( stdout, "Dump data (DumpID = %d) ... done\n", DumpID );
@@ -1253,3 +1338,109 @@ int Aux_IsFinite( const double x )
    else                                                        return 1;
 
 } // FUNCTION : Aux_IsFinite
+
+
+
+template <typename T>
+static void Heapsort_SiftDown( const int L, const int R, T Array[], int IdxTable[] );
+
+//OPTIMIZATION : (1) quick sort  (2) try the "qsort" library
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_Heapsort
+// Description :  Use the Heapsort algorithm to sort the input array into ascending numerical order
+//                --> An index table will also be constructed if "IdxTable != NULL"
+//
+// Note        :  1. Ref : Numerical Recipes Chapter 8.3 - 8.4
+//                2. Overloaded with different types
+//                   --> Explicit template instantiation is put in the end of this file
+//
+// Parameter   :  N        :  Size of Array
+//                Array    :  Array to be sorted into ascending numerical order
+//                IdxTable :  Index table
+//-------------------------------------------------------------------------------------------------------
+template <typename T>
+void Mis_Heapsort( const int N, T Array[], int IdxTable[] )
+{
+
+// initialize the IdxTable
+   if ( IdxTable != NULL )
+      for (int t=0; t<N; t++)    IdxTable[t] = t;
+
+// heap creation
+   for (int L=N/2-1; L>=0; L--)  Heapsort_SiftDown( L, N-1, Array, IdxTable );
+
+// retirement-and-promotion
+   T Buf;
+   for (int R=N-1; R>0; R--)
+   {
+      Buf      = Array[R];
+      Array[R] = Array[0];
+      Array[0] = Buf;
+
+      if ( IdxTable != NULL )
+      {
+         Buf         = IdxTable[R];
+         IdxTable[R] = IdxTable[0];
+         IdxTable[0] = Buf;
+      }
+
+      Heapsort_SiftDown( 0, R-1, Array, IdxTable );
+   }
+
+} // FUNCTION : Mis_Heapsort
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Heapsort_SiftDown
+// Description :  Sift-down process for the Heapsort algorithm
+//
+// Note        :  1. Ref : Numerical Recipes Chapter 8.3 - 8.4
+//                2. Overloaded with different types
+//
+// Parameter   :  L        :  Left  range of the sift-down
+//                R        :  Right range of the sift-down
+//                Array    :  Array to be sorted into ascending numerical order
+//                IdxTable :  Index table
+//-------------------------------------------------------------------------------------------------------
+template <typename T>
+void Heapsort_SiftDown( const int L, const int R, T Array[], int IdxTable[] )
+{
+
+   int  Idx_up    = L;
+   int  Idx_down  = 2*Idx_up + 1;
+   T    Target    = Array[Idx_up];
+   int  TargetIdx = ( IdxTable == NULL ) ? -1 : IdxTable[Idx_up];
+
+   while ( Idx_down <= R )
+   {
+//    find the better employee
+      if ( Idx_down < R  &&  Array[Idx_down+1] > Array[Idx_down] )   Idx_down ++;
+
+//    terminate the sift-down process if the target (supervisor) is better than both its employees
+      if ( Target >= Array[Idx_down] )    break;
+
+//    otherwise, promote the better employee
+      Array[Idx_up] = Array[Idx_down];
+      if ( IdxTable != NULL )    IdxTable[Idx_up] = IdxTable[Idx_down];
+
+//    prepare the next sift-down operation
+      Idx_up   = Idx_down;
+      Idx_down = 2*Idx_up + 1;
+   }
+
+// put target at its best position
+   Array[Idx_up] = Target;
+   if ( IdxTable != NULL )    IdxTable[Idx_up] = TargetIdx;
+
+} // FUNCTION : Heapsort_SiftDown
+
+
+
+// explicit template instantiation
+template void Mis_Heapsort <int>    ( const int N, int    Array[], int IdxTable[] );
+template void Mis_Heapsort <long>   ( const int N, long   Array[], int IdxTable[] );
+template void Mis_Heapsort <ulong>  ( const int N, ulong  Array[], int IdxTable[] );
+template void Mis_Heapsort <float>  ( const int N, float  Array[], int IdxTable[] );
+template void Mis_Heapsort <double> ( const int N, double Array[], int IdxTable[] );
+

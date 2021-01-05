@@ -18,6 +18,7 @@ double SOL_MSC;      // star cluster mass [Msun]
 double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
 double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
 bool   SOL_REC_DIS;  // record the particle distance (used together with OUTPUT_DT)
+bool   SOL_REC_HLR;  // record the half-light radius and center of mass (used together with OUTPUT_DT)
 
 double SOL_TSC;      // star cluster time scale [Gyr]
 
@@ -67,6 +68,7 @@ void Ext_Init()
       Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP );
       Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T   );
       Aux_Message( stdout, "   SOL_REC_DIS   = %d\n",                SOL_REC_DIS );
+      Aux_Message( stdout, "   SOL_REC_HLR   = %d\n",                SOL_REC_HLR );
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS    );
       Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC     );

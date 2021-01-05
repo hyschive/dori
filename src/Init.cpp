@@ -506,6 +506,10 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
    sscanf( input_line, "%d%s",   &temp_int,        string );
    SOL_REC_DIS = temp_int;
 
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%d%s",   &temp_int,        string );
+   SOL_REC_HLR = temp_int;
+
    fclose(File);
 
 
