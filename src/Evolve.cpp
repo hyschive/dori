@@ -289,7 +289,7 @@ void BeginRing_Acc_Jerk( const double Time, const real Pos_Pred[][3], const real
             }
          }
 
-       } // for (int RingLoop=0; RingLoop<NGPU; RingLoop++)
+      } // for (int RingLoop=0; RingLoop<NGPU; RingLoop++)
 
 //    reset the number of particles to be sent and received for the final data trasnfer
       if ( NGPU != 1 )
@@ -312,6 +312,20 @@ void BeginRing_Acc_Jerk( const double Time, const real Pos_Pred[][3], const real
 // 3. external gravity
    if ( GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  GRAVITY_TYPE == GRAVITY_BOTH )
    {
+//    restore the line-up particles of this rank
+#     pragma omp parallel for schedule( runtime )
+      for (int j=0; j<L; j++)
+      {
+         const int i = PlayerList[j];
+
+         for (int dim=0; dim<3; dim++)
+         {
+             Pos_LineUp[j][dim] = Pos_Pred[i][dim];
+             Vel_LineUp[j][dim] = Vel_Pred[i][dim];
+         }
+      }
+
+//    add external gravity
       switch ( EXT_METHOD )
       {
          case EXT_FUNC :   Ext_AddAccFromFunc( L, Pos_LineUp, Vel_LineUp, Acc_Pred, Jerk_Pred, Time );   break;
