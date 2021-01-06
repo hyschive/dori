@@ -51,3 +51,4 @@
 0.7      SOL_OSC_T         # soliton oscillation time (compared to SOL_TSC)
 0        SOL_REC_DIS       # record the particle distance (used together with OUTPUT_DT; must have TOTAL_N=NGPU=1)
 1        SOL_REC_HLR       # record the half-light radius and center of mass (used together with OUTPUT_DT)
+0        SOL_EXT_SC        # regard the star cluster as an external field

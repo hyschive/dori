@@ -20,6 +20,7 @@ double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
 double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
 bool   SOL_REC_DIS;  // record the particle distance (used together with OUTPUT_DT)
 bool   SOL_REC_HLR;  // record the half-light radius and center of mass (used together with OUTPUT_DT)
+bool   SOL_EXT_SC;   // regard the star cluster as an external field
 
 double SOL_TSC;      // star cluster time scale [Gyr]
 
@@ -57,7 +58,7 @@ void Ext_Init()
    double SOL_DENS;  // soliton peak density [Msun/kpc^3]
 
    SOL_DENS = 1.945e7 / SQR(SOL_M22) / ( SQR(SOL_RCORE)*SQR(SOL_RCORE) );
-   SOL_TSC  = sqrt(  4.0 * SQR(M_PI) * CUBE(SOL_RSC) / ( NEWTON_G*Ext_TotalEnclosedMass(SOL_RSC,0.0) )  );
+   SOL_TSC  = sqrt(  4.0 * SQR(M_PI) * CUBE(SOL_RSC) / ( NEWTON_G*Ext_TotalEnclosedMass(SOL_RSC,0.0,true) )  );
 
 
    if ( MyRank == 0 )
@@ -73,6 +74,7 @@ void Ext_Init()
       Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T   );
       Aux_Message( stdout, "   SOL_REC_DIS   = %d\n",                SOL_REC_DIS );
       Aux_Message( stdout, "   SOL_REC_HLR   = %d\n",                SOL_REC_HLR );
+      Aux_Message( stdout, "   SOL_EXT_SC    = %d\n",                SOL_EXT_SC  );
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS    );
       Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC     );
@@ -91,13 +93,15 @@ void Ext_Init()
 //
 // Note        :  1. Invoked by Get_TotalEnergy()
 //                2. See below for the assumed units
+//                3. See Ext_TotalEnclosedMass() for the purpose of "AddSC"
 //
-// Parameter   :  r : Target radius [kpc]
-//                t : Target time [Gyr]
+// Parameter   :  r     : Target radius [kpc]
+//                t     : Target time [Gyr]
+//                AddSC : Add a star cluster or not
 //
 // Return      :  External potential [kpc^2/Gyr^2]
 //----------------------------------------------------------------------
-real Ext_TotalPot( const double r, const double t )
+real Ext_TotalPot( const double r, const double t, const bool AddSC )
 {
 
    real OscPhase, OscRcore, ExtPot_Sol, ExtPot_SC, ExtPot_Tot;
@@ -105,7 +109,7 @@ real Ext_TotalPot( const double r, const double t )
    OscPhase   = 2.0*M_PI/(SOL_TSC*SOL_OSC_T)*t;
    OscRcore   = SOL_RCORE*POW( 1.0 + SOL_OSC_AMP*SIN(OscPhase), (real)-0.25 );   // rho ~ r^{-4}
    ExtPot_Sol = Ext_SolitonPot( r, SOL_M22, OscRcore );
-   ExtPot_SC  = -NEWTON_G*SOL_MSC/r;
+   ExtPot_SC  = ( AddSC ) ? -NEWTON_G*SOL_MSC/r : (real)0.0;
    ExtPot_Tot = ExtPot_Sol + ExtPot_SC;
 
    return ExtPot_Tot;
@@ -157,20 +161,28 @@ real Ext_SolitonPot( const real r, const real m22, const real rc )
 //
 // Note        :  1. Invoked by Ext_AddAccFromFunc() and Init_Particles()
 //                2. See below for the assumed units
+//                3. "AddSC" is useful when we do not want to regard the
+//                   star cluster as an external field (i.e., when simulating
+//                   a dynamically evolving star cluster) but still want to
+//                   include the star cluster contribution when estimating
+//                   the oscillation time scale
 //
-// Parameter   :  r : Target radius [kpc]
-//                t : Target time [Gyr]
+// Parameter   :  r     : Target radius [kpc]
+//                t     : Target time [Gyr]
+//                AddSC : Add a star cluster or not
 //
 // Return      :  Enclosed mass [Msun]
 //----------------------------------------------------------------------
-real Ext_TotalEnclosedMass( const double r, const double t )
+real Ext_TotalEnclosedMass( const double r, const double t, const bool AddSC )
 {
 
    real OscPhase, OscRcore, M;
 
    OscPhase = 2.0*M_PI/(SOL_TSC*SOL_OSC_T)*t;
    OscRcore = SOL_RCORE*POW( 1.0 + SOL_OSC_AMP*SIN(OscPhase), (real)-0.25 );   // rho ~ r^{-4}
-   M        = Ext_SolitonMass( r, SOL_M22, OscRcore ) + SOL_MSC;
+   M        = Ext_SolitonMass( r, SOL_M22, OscRcore );
+
+   if ( AddSC )   M += SOL_MSC;
 
    /*
    FILE *file = fopen( "Rcore", "a" );
@@ -257,7 +269,7 @@ void Ext_AddAccFromFunc( const int NPar, const real (*MyPos)[3], const real (*My
       for (int d=0; d<3; d++)    dr[d] = MyPos[p][d] - SOL_CEN[d];
 
       r     = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
-      GM_r3 = NEWTON_G * Ext_TotalEnclosedMass( r, Time ) / CUBE(r);
+      GM_r3 = NEWTON_G * Ext_TotalEnclosedMass( r, Time, SOL_EXT_SC ) / CUBE(r);
 
       for (int d=0; d<3; d++)    MyAcc[p][d] += -GM_r3*dr[d];
 

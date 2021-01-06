@@ -361,7 +361,7 @@ void Get_TotalEnergy( bool UseInputEgy, real INIT_E )
             for (int d=0; d<3; d++)    dr[d] = Pos[i][d] - SOL_CEN[d];
 
             r             = SQRT( SQR(dr[0]) + SQR(dr[1]) + SQR(dr[2]) );
-            PE_Ext_local += Mass[i]*Ext_TotalPot( r, Global_Time );
+            PE_Ext_local += Mass[i]*Ext_TotalPot( r, Global_Time, SOL_EXT_SC );
          }
 
          MPI_Reduce( &PE_Ext_local, &PE_Ext, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
