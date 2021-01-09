@@ -85,7 +85,7 @@ extern bool   SOL_REC_DIS;
 extern bool   SOL_REC_HLR;
 extern bool   SOL_EXT_SC;
 
-extern double SOL_DENS;
+extern double SOL_SC_CM[3];
 extern double SOL_TSC;
 
 

@@ -22,12 +22,71 @@ bool   SOL_REC_DIS;  // record the particle distance (used together with OUTPUT_
 bool   SOL_REC_HLR;  // record the half-light radius and center of mass (used together with OUTPUT_DT)
 bool   SOL_EXT_SC;   // regard the star cluster as an external field
 
+double SOL_SC_CM[3]; // center of mass of the star cluster
 double SOL_TSC;      // star cluster time scale [Gyr]
 
 
 static real Ext_SolitonMass( const real r, const real m22, const real rc );
 static real Ext_SolitonPot( const real r, const real m22, const real rc );
 
+
+
+
+//----------------------------------------------------------------------
+// Function    :  Ext_GetCM
+// Description :  Compute the center of mass of the star cluster
+//
+// Note        :  1. Invoked by Main() and OutputData()
+//
+// Parameter   :  None
+//
+// Return      :  Total mass
+//----------------------------------------------------------------------
+double Ext_GetCM()
+{
+
+// collect all particles to the root rank
+   real (*MassAll)   = ( MyRank == 0 ) ? new real [TOTAL_N]    : NULL;
+   real (*PosAll)[3] = ( MyRank == 0 ) ? new real [TOTAL_N][3] : NULL;
+
+   MPI_Gather( Mass,    N,   GAMER_MPI_REAL,
+               MassAll, N,   GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
+
+   MPI_Gather( Pos,     N*3, GAMER_MPI_REAL,
+               PosAll,  N*3, GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
+
+
+// compute CM
+   double TotalM=0.0;
+
+   if ( MyRank == 0 )
+   {
+      for (int d=0; d<3; d++)    SOL_SC_CM[d] = 0.0;
+
+      for (int i=0; i<TOTAL_N; i++)
+      {
+         TotalM += MassAll[i];
+
+         for (int d=0; d<3; d++)    SOL_SC_CM[d] += MassAll[i]*PosAll[i][d];
+      }
+
+      for (int d=0; d<3; d++)    SOL_SC_CM[d] /= TotalM;
+   }
+
+
+// broadcast
+   MPI_Bcast( &TotalM,   1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( SOL_SC_CM, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+
+
+// free memory
+   delete [] MassAll;
+   delete [] PosAll;
+
+
+   return TotalM;
+
+} // FUNCTION : Ext_GetCM
 
 
 

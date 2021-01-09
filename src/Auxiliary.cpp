@@ -714,6 +714,10 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
 
       if ( SOL_REC_HLR )
       {
+//       compute the center of mass
+         const double TotalM = Ext_GetCM();
+
+
 //       collect all particles to the root rank
          real (*MassAll)   = ( MyRank == 0 ) ? new real [TOTAL_N]    : NULL;
          real (*PosAll)[3] = ( MyRank == 0 ) ? new real [TOTAL_N][3] : NULL;
@@ -725,24 +729,11 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
                      PosAll,  N*3, GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
 
 
+//       compute the half-light radius
+//       --> strictly speaking, we are computing the 2D half-mass radius (i.e., the radius where the 2D projected
+//           mass profile is half of the total mass)
          if ( MyRank == 0 )
          {
-//          compute the center of mass
-            double TotalM=0.0, CM[3]={ 0.0, 0.0, 0.0 };
-
-            for (int i=0; i<TOTAL_N; i++)
-            {
-               TotalM += MassAll[i];
-
-               for (int d=0; d<3; d++)    CM[d] += MassAll[i]*PosAll[i][d];
-            }
-
-            for (int d=0; d<3; d++)    CM[d] /= TotalM;
-
-
-//          compute the half-light radius
-//          --> strictly speaking, we are computing the 2D half-mass radius (i.e., the radius where the 2D projected
-//              mass profile is half of the total mass)
             double (*R2D) = new double [TOTAL_N];
             int    (*Idx) = new int    [TOTAL_N];
             double dx, dy, HLR, EnclosedMass=0.0;
@@ -750,8 +741,8 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
             for (int i=0; i<TOTAL_N; i++)
             {
 //             project along the z direction
-               dx     = PosAll[i][0] - CM[0];
-               dy     = PosAll[i][1] - CM[1];
+               dx     = PosAll[i][0] - SOL_SC_CM[0];
+               dy     = PosAll[i][1] - SOL_SC_CM[1];
                R2D[i] = sqrt( SQR(dx) + SQR(dy) );
             }
 
@@ -782,12 +773,15 @@ void OutputData( const int Init_DumpID, const bool Binary_Output )
                fprintf( File_HLR, "# Time   unit : Gyr\n" );
                fprintf( File_HLR, "# Length unit : kpc\n" );
                fprintf( File_HLR, "\n" );
-               fprintf( File_HLR, "#%12s  %10s  %13s  %14s  %14s  %14s\n",
-                        "Time", "Step", "HLR", "CM[x]", "CM[y]", "CM[z]" );
+               fprintf( File_HLR, "#%12s  %10s  %13s  %14s  %14s  %14s  %14s\n",
+                        "Time", "Step", "R_HL", "CM[x]", "CM[y]", "CM[z]", "R_CM" );
             }
 
-            fprintf( File_HLR, "%13.7e  %10ld  %13.7e  %14.7e  %14.7e  %14.7e\n",
-                     Global_Time, Step, HLR, CM[0], CM[1], CM[2] );
+            const double R_SC_Soliton = sqrt(  SQR( SOL_SC_CM[0]-SOL_CEN[0] ) +
+                                               SQR( SOL_SC_CM[1]-SOL_CEN[1] ) +
+                                               SQR( SOL_SC_CM[2]-SOL_CEN[2] )  );
+            fprintf( File_HLR, "%13.7e  %10ld  %13.7e  %14.7e  %14.7e  %14.7e  %14.7e\n",
+                     Global_Time, Step, HLR, SOL_SC_CM[0], SOL_SC_CM[1], SOL_SC_CM[2], R_SC_Soliton );
 
             fclose( File_HLR );
          } // if ( MyRank == 0 )

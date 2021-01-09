@@ -105,6 +105,7 @@ void Ext_LoadExtAcc();
 void Ext_Init();
 real Ext_TotalEnclosedMass( const double r, const double t, const bool AddSC );
 real Ext_TotalPot( const double r, const double t, const bool AddSC );
+double Ext_GetCM();
 
 
 
