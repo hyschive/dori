@@ -2,6 +2,7 @@
 
 // global variables (all declared as extern variables in the file "Global.h")
 int              TOTAL_N, N, NGPU, OMP_NTHREAD;
+int              RESTART;
 real             NEWTON_G, EPS_SQR, ETA, INIT_ETA;
 int              SPLIT_NMAX;
 long             LOG_STEP;
@@ -44,11 +45,11 @@ int main( int argc, char* argv[] )
    long int INIT_STEP, END_STEP;
    int      INIT_DUMP_ID, GPUID_SELECT;
    double   OUTPUT_DT, ENERGY_DT, MOMENTUM_DT, DT_DIAGNOSIS_DT;
-   int      RESTART;
    real     INIT_E    = (real)1.e10;
    real     INIT_L[3] = { (real)1.e10, (real)1.e10, (real)1.e10 };
    bool     BINARY_OUTPUT, CONST_INIT_DT;
 
+   double   CM_t           = 0.0;
    double   Energy_t       = 0.0;
    double   Momentum_t     = 0.0;
    double   Output_t       = 0.0;
@@ -89,11 +90,11 @@ int main( int argc, char* argv[] )
 #  endif
 
    Init_Particles( INIT_T );
-   Init_t_dt_step( INIT_T, INIT_STEP, Energy_t, Momentum_t, Output_t, dt_diagnosis_t, ENERGY_DT, MOMENTUM_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
+   Init_t_dt_step( INIT_T, INIT_STEP, CM_t, Energy_t, Momentum_t, Output_t, dt_diagnosis_t,
+                   ENERGY_DT, MOMENTUM_DT, OUTPUT_DT, DT_DIAGNOSIS_DT,
                    CONST_INIT_DT );
 
    Get_Next_Global_Time();
-
 
    if ( ENERGY_DT >= 0.0 )    Get_TotalEnergy( RESTART, INIT_E );
 
@@ -132,6 +133,14 @@ int main( int argc, char* argv[] )
       Get_Next_Global_Time();
 
 
+      if ( SOL_SC_CM_DT >= 0.0  &&  Global_Time >= CM_t )
+      {
+         Synchronize();
+         Ext_GetCM();
+         if ( SOL_CEN_MODE == 3 )   for (int d=0; d<3; d++)    SOL_CEN[d] = SOL_SC_CM[d];
+         CM_t += SOL_SC_CM_DT;
+      }
+
       if ( ENERGY_DT >= 0.0  &&  Global_Time >= Energy_t )
       {
          Synchronize();
@@ -169,11 +178,13 @@ int main( int argc, char* argv[] )
    Timer_MPI = MPI_Wtime() - Timer_MPI;
 
 
-   if ( ENERGY_DT >= 0.0 )    Get_TotalEnergy( false, 0.0 );
+   if ( SOL_SC_CM_DT >= 0.0 )       Ext_GetCM();
 
-   if ( MOMENTUM_DT >= 0.0 )  Get_TotalMomentum( false, NULL );
+   if ( ENERGY_DT >= 0.0 )          Get_TotalEnergy( false, 0.0 );
 
-   if ( OUTPUT_DT >= 0.0 )    OutputData( INIT_DUMP_ID, BINARY_OUTPUT );
+   if ( MOMENTUM_DT >= 0.0 )        Get_TotalMomentum( false, NULL );
+
+   if ( OUTPUT_DT >= 0.0 )          OutputData( INIT_DUMP_ID, BINARY_OUTPUT );
 
    if ( DT_DIAGNOSIS_DT >= 0.0 )    dt_diagnosis();
 

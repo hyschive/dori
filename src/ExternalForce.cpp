@@ -14,6 +14,8 @@
 double SOL_M22;      // Boson mass [1e-22 eV]
 double SOL_RCORE;    // soliton core radius [kpc]
 double SOL_CEN[3];   // soliton center
+int    SOL_CEN_MODE; // how to set soliton center (1/2/3: input, initial star cluster CM, dynamical star cluster CM)
+double SOL_SC_CM_DT; // time interval for recomputing the star cluster CM
 double SOL_RSC;      // star cluster radius [kpc]
 double SOL_MSC;      // star cluster mass [Msun]
 double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
@@ -113,6 +115,20 @@ void Ext_Init()
       if ( NGPU    != 1 )  Aux_Error( ERROR_INFO, "SOL_REC_DIS must work with NGPU=1 !!\n" );
    }
 
+   if ( SOL_CEN_MODE < 1  ||  SOL_CEN_MODE > 3 )
+      Aux_Error( ERROR_INFO, "incorrect SOL_CEN_MODE = %d !!\n", SOL_CEN_MODE );
+
+   if (  ( SOL_CEN_MODE == 2 || SOL_CEN_MODE == 3 )  &&  SOL_SC_CM_DT < 0.0  )
+      Aux_Error( ERROR_INFO, "SOL_SC_CM_DT = %14.7e < 0.0 for SOL_CEN_MODE = 2/3 !!\n", SOL_SC_CM_DT );
+
+   if (  SOL_CEN_MODE == 1  ||  ( SOL_CEN_MODE == 2 && RESTART )  )
+   {
+      for (int d=0; d<3; d++)
+         if ( SOL_CEN[d] < -1.0e1 )
+            Aux_Error( ERROR_INFO, "SOL_CEN[%d] = %14.7e < -1.0e1 --> do you forget to set it !?\n",
+                       d, SOL_CEN[d] );
+   }
+
 
    double SOL_DENS;  // soliton peak density [Msun/kpc^3]
 
@@ -122,21 +138,23 @@ void Ext_Init()
 
    if ( MyRank == 0 )
    {
-      Aux_Message( stdout, "   SOL_M22       = %13.7e 1e-22 eV\n",   SOL_M22     );
-      Aux_Message( stdout, "   SOL_RCORE     = %13.7e kpc\n",        SOL_RCORE   );
-      Aux_Message( stdout, "   SOL_CEN[x]    = %13.7e kpc\n",        SOL_CEN[0]  );
-      Aux_Message( stdout, "   SOL_CEN[y]    = %13.7e kpc\n",        SOL_CEN[1]  );
-      Aux_Message( stdout, "   SOL_CEN[z]    = %13.7e kpc\n",        SOL_CEN[2]  );
-      Aux_Message( stdout, "   SOL_RSC       = %13.7e kpc\n",        SOL_RSC     );
-      Aux_Message( stdout, "   SOL_MSC       = %13.7e Msun\n",       SOL_MSC     );
-      Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP );
-      Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T   );
-      Aux_Message( stdout, "   SOL_REC_DIS   = %d\n",                SOL_REC_DIS );
-      Aux_Message( stdout, "   SOL_REC_HLR   = %d\n",                SOL_REC_HLR );
-      Aux_Message( stdout, "   SOL_EXT_SC    = %d\n",                SOL_EXT_SC  );
+      Aux_Message( stdout, "   SOL_M22       = %13.7e 1e-22 eV\n",   SOL_M22      );
+      Aux_Message( stdout, "   SOL_RCORE     = %13.7e kpc\n",        SOL_RCORE    );
+      Aux_Message( stdout, "   SOL_CEN[x]    = %13.7e kpc\n",        SOL_CEN[0]   );
+      Aux_Message( stdout, "   SOL_CEN[y]    = %13.7e kpc\n",        SOL_CEN[1]   );
+      Aux_Message( stdout, "   SOL_CEN[z]    = %13.7e kpc\n",        SOL_CEN[2]   );
+      Aux_Message( stdout, "   SOL_CEN_MODE  = %d\n",                SOL_CEN_MODE );
+      Aux_Message( stdout, "   SOL_SC_CM_DT  = %13.7e Gyr\n",        SOL_SC_CM_DT );
+      Aux_Message( stdout, "   SOL_RSC       = %13.7e kpc\n",        SOL_RSC      );
+      Aux_Message( stdout, "   SOL_MSC       = %13.7e Msun\n",       SOL_MSC      );
+      Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP  );
+      Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T    );
+      Aux_Message( stdout, "   SOL_REC_DIS   = %d\n",                SOL_REC_DIS  );
+      Aux_Message( stdout, "   SOL_REC_HLR   = %d\n",                SOL_REC_HLR  );
+      Aux_Message( stdout, "   SOL_EXT_SC    = %d\n",                SOL_EXT_SC   );
       Aux_Message( stdout, "\n" );
-      Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS    );
-      Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC     );
+      Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS     );
+      Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC      );
    }
 
 

@@ -75,8 +75,9 @@ void BeginHybrid_Acc_Jerk( const double Time, const real Pos_Pred[][3], const re
 
 // Init.h
 void Init_MPI( int argc, char *argv[] );
-void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Energy_t, double &Momentum_t, double &Output_t,
-                     double &dt_diagnosis_t, const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT,
+void Init_t_dt_step( const double INIT_T, const long int INIT_STEP,
+                     double &CM_t, double &Energy_t, double &Momentum_t, double &Output_t, double &dt_diagnosis_t,
+                     const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT,
                      const double DT_DIAGNOSIS_DT, const bool CONST_INIT_DT );
 void Init_Particles( const double INIT_T );
 void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int &END_STEP,

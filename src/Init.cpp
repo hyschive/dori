@@ -33,8 +33,9 @@ void Init_MPI( int argc, char *argv[] )
 // Function    :  Init_t_dt_step
 // Description :  Initialize t, dt and step
 //----------------------------------------------------------------------
-void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Energy_t, double &Momentum_t, double &Output_t,
-                     double &dt_diagnosis_t, const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT,
+void Init_t_dt_step( const double INIT_T, const long int INIT_STEP,
+                     double &CM_t, double &Energy_t, double &Momentum_t, double &Output_t, double &dt_diagnosis_t,
+                     const double ENERGY_DT, const double MOMENTUM_DT, const double OUTPUT_DT,
                      const double DT_DIAGNOSIS_DT, const bool CONST_INIT_DT )
 {
 
@@ -49,6 +50,7 @@ void Init_t_dt_step( const double INIT_T, const long int INIT_STEP, double &Ener
    Step = INIT_STEP;
 
 // initialize Energy_t, Momentum_t, Output_t, and dt_diagnosis_t
+   CM_t           = Global_Time + SOL_SC_CM_DT;
    Energy_t       = Global_Time + ENERGY_DT;
    Momentum_t     = Global_Time + MOMENTUM_DT;
    Output_t       = Global_Time + OUTPUT_DT;
@@ -278,6 +280,17 @@ void Init_Particles( const double INIT_T )
    for (int i=0; i<N; i++)    PlayerList[i] = i;
 
 
+// get the center of mass and set the soliton center
+// --> must do it before computing acceleration
+   if ( SOL_SC_CM_DT >= 0.0 )
+   {
+      Ext_GetCM();
+
+      if (  ( SOL_CEN_MODE == 2 && !RESTART )  ||  SOL_CEN_MODE == 3  )
+         for (int d=0; d<3; d++)    SOL_CEN[d] = SOL_SC_CM[d];
+   }
+
+
 // get initial acceleration and jerk
    int Temp_List[NGPU];
    for (int i=0; i<NGPU; i++)    Temp_List[i] = N;
@@ -498,6 +511,12 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_CEN[2],      string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%d%s",   &SOL_CEN_MODE,    string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%lf%s",  &SOL_SC_CM_DT,    string );
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_RSC,         string );
