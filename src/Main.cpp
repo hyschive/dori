@@ -137,8 +137,16 @@ int main( int argc, char* argv[] )
       {
          Synchronize();
          Ext_GetCM();
-         if ( SOL_CEN_MODE == 3 )   for (int d=0; d<3; d++)    SOL_CEN[d] = SOL_SC_CM[d];
          CM_t += SOL_SC_CM_DT;
+
+         if ( SOL_CEN_MODE == 3 )
+         {
+            for (int d=0; d<3; d++)    SOL_CEN[d] = SOL_SC_RCM[d];
+
+            if ( SOL_REMOVE_VCM )
+            for (int i=0; i<N; i++)
+            for (int d=0; d<3; d++)    Vel[i][d] -= SOL_SC_VCM[d];
+         }
       }
 
       if ( ENERGY_DT >= 0.0  &&  Global_Time >= Energy_t )

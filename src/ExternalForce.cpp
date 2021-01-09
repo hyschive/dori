@@ -11,21 +11,23 @@
 #endif
 
 
-double SOL_M22;      // Boson mass [1e-22 eV]
-double SOL_RCORE;    // soliton core radius [kpc]
-double SOL_CEN[3];   // soliton center
-int    SOL_CEN_MODE; // how to set soliton center (1/2/3: input, initial star cluster CM, dynamical star cluster CM)
-double SOL_SC_CM_DT; // time interval for recomputing the star cluster CM
-double SOL_RSC;      // star cluster radius [kpc]
-double SOL_MSC;      // star cluster mass [Msun]
-double SOL_OSC_AMP;  // soliton oscillation amplitude (compared to SOL_DENS)
-double SOL_OSC_T;    // soliton oscillation time (compared to SOL_TSC)
-bool   SOL_REC_DIS;  // record the particle distance (used together with OUTPUT_DT)
-bool   SOL_REC_HLR;  // record the half-light radius and center of mass (used together with OUTPUT_DT)
-bool   SOL_EXT_SC;   // regard the star cluster as an external field
+double SOL_M22;         // Boson mass [1e-22 eV]
+double SOL_RCORE;       // soliton core radius [kpc]
+double SOL_CEN[3];      // soliton center
+int    SOL_CEN_MODE;    // how to set soliton center (1/2/3: input, initial star cluster CM, dynamical star cluster CM)
+double SOL_SC_CM_DT;    // time interval for recomputing the star cluster CM
+bool   SOL_REMOVE_VCM;  // remove the CM velocity of the star cluster
+double SOL_RSC;         // star cluster radius [kpc]
+double SOL_MSC;         // star cluster mass [Msun]
+double SOL_OSC_AMP;     // soliton oscillation amplitude (compared to SOL_DENS)
+double SOL_OSC_T;       // soliton oscillation time (compared to SOL_TSC)
+bool   SOL_REC_DIS;     // record the particle distance (used together with OUTPUT_DT)
+bool   SOL_REC_HLR;     // record the half-light radius and center of mass (used together with OUTPUT_DT)
+bool   SOL_EXT_SC;      // regard the star cluster as an external field
 
-double SOL_SC_CM[3]; // center of mass of the star cluster
-double SOL_TSC;      // star cluster time scale [Gyr]
+double SOL_SC_RCM[3];   // center-of-mass position/velocity of the star cluster
+double SOL_SC_VCM[3];
+double SOL_TSC;         // star cluster time scale [Gyr]
 
 
 static real Ext_SolitonMass( const real r, const real m22, const real rc );
@@ -50,6 +52,7 @@ double Ext_GetCM()
 // collect all particles to the root rank
    real (*MassAll)   = ( MyRank == 0 ) ? new real [TOTAL_N]    : NULL;
    real (*PosAll)[3] = ( MyRank == 0 ) ? new real [TOTAL_N][3] : NULL;
+   real (*VelAll)[3] = ( MyRank == 0 ) ? new real [TOTAL_N][3] : NULL;
 
    MPI_Gather( Mass,    N,   GAMER_MPI_REAL,
                MassAll, N,   GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
@@ -57,33 +60,50 @@ double Ext_GetCM()
    MPI_Gather( Pos,     N*3, GAMER_MPI_REAL,
                PosAll,  N*3, GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
 
+   MPI_Gather( Vel,     N*3, GAMER_MPI_REAL,
+               VelAll,  N*3, GAMER_MPI_REAL, 0, MPI_COMM_WORLD );
+
 
 // compute CM
    double TotalM=0.0;
 
    if ( MyRank == 0 )
    {
-      for (int d=0; d<3; d++)    SOL_SC_CM[d] = 0.0;
+      for (int d=0; d<3; d++)
+      {
+         SOL_SC_RCM[d] = 0.0;
+         SOL_SC_VCM[d] = 0.0;
+      }
 
       for (int i=0; i<TOTAL_N; i++)
       {
          TotalM += MassAll[i];
 
-         for (int d=0; d<3; d++)    SOL_SC_CM[d] += MassAll[i]*PosAll[i][d];
+         for (int d=0; d<3; d++)
+         {
+            SOL_SC_RCM[d] += MassAll[i]*PosAll[i][d];
+            SOL_SC_VCM[d] += MassAll[i]*VelAll[i][d];
+         }
       }
 
-      for (int d=0; d<3; d++)    SOL_SC_CM[d] /= TotalM;
-   }
+      for (int d=0; d<3; d++)
+      {
+         SOL_SC_RCM[d] /= TotalM;
+         SOL_SC_VCM[d] /= TotalM;
+      }
+   } // if ( MyRank == 0 )
 
 
 // broadcast
-   MPI_Bcast( &TotalM,   1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Bcast( SOL_SC_CM, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( &TotalM,    1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( SOL_SC_RCM, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( SOL_SC_VCM, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
 
 // free memory
    delete [] MassAll;
    delete [] PosAll;
+   delete [] VelAll;
 
 
    return TotalM;
@@ -138,23 +158,24 @@ void Ext_Init()
 
    if ( MyRank == 0 )
    {
-      Aux_Message( stdout, "   SOL_M22       = %13.7e 1e-22 eV\n",   SOL_M22      );
-      Aux_Message( stdout, "   SOL_RCORE     = %13.7e kpc\n",        SOL_RCORE    );
-      Aux_Message( stdout, "   SOL_CEN[x]    = %13.7e kpc\n",        SOL_CEN[0]   );
-      Aux_Message( stdout, "   SOL_CEN[y]    = %13.7e kpc\n",        SOL_CEN[1]   );
-      Aux_Message( stdout, "   SOL_CEN[z]    = %13.7e kpc\n",        SOL_CEN[2]   );
-      Aux_Message( stdout, "   SOL_CEN_MODE  = %d\n",                SOL_CEN_MODE );
-      Aux_Message( stdout, "   SOL_SC_CM_DT  = %13.7e Gyr\n",        SOL_SC_CM_DT );
-      Aux_Message( stdout, "   SOL_RSC       = %13.7e kpc\n",        SOL_RSC      );
-      Aux_Message( stdout, "   SOL_MSC       = %13.7e Msun\n",       SOL_MSC      );
-      Aux_Message( stdout, "   SOL_OSC_AMP   = %13.7e\n",            SOL_OSC_AMP  );
-      Aux_Message( stdout, "   SOL_OSC_T     = %13.7e\n",            SOL_OSC_T    );
-      Aux_Message( stdout, "   SOL_REC_DIS   = %d\n",                SOL_REC_DIS  );
-      Aux_Message( stdout, "   SOL_REC_HLR   = %d\n",                SOL_REC_HLR  );
-      Aux_Message( stdout, "   SOL_EXT_SC    = %d\n",                SOL_EXT_SC   );
+      Aux_Message( stdout, "   SOL_M22        = %13.7e 1e-22 eV\n",   SOL_M22        );
+      Aux_Message( stdout, "   SOL_RCORE      = %13.7e kpc\n",        SOL_RCORE      );
+      Aux_Message( stdout, "   SOL_CEN[x]     = %13.7e kpc\n",        SOL_CEN[0]     );
+      Aux_Message( stdout, "   SOL_CEN[y]     = %13.7e kpc\n",        SOL_CEN[1]     );
+      Aux_Message( stdout, "   SOL_CEN[z]     = %13.7e kpc\n",        SOL_CEN[2]     );
+      Aux_Message( stdout, "   SOL_CEN_MODE   = %d\n",                SOL_CEN_MODE   );
+      Aux_Message( stdout, "   SOL_SC_CM_DT   = %13.7e Gyr\n",        SOL_SC_CM_DT   );
+      Aux_Message( stdout, "   SOL_REMOVE_VCM = %d\n",                SOL_REMOVE_VCM );
+      Aux_Message( stdout, "   SOL_RSC        = %13.7e kpc\n",        SOL_RSC        );
+      Aux_Message( stdout, "   SOL_MSC        = %13.7e Msun\n",       SOL_MSC        );
+      Aux_Message( stdout, "   SOL_OSC_AMP    = %13.7e\n",            SOL_OSC_AMP    );
+      Aux_Message( stdout, "   SOL_OSC_T      = %13.7e\n",            SOL_OSC_T      );
+      Aux_Message( stdout, "   SOL_REC_DIS    = %d\n",                SOL_REC_DIS    );
+      Aux_Message( stdout, "   SOL_REC_HLR    = %d\n",                SOL_REC_HLR    );
+      Aux_Message( stdout, "   SOL_EXT_SC     = %d\n",                SOL_EXT_SC     );
       Aux_Message( stdout, "\n" );
-      Aux_Message( stdout, "   SOL_DENS      = %13.7e Msun/kpc^3\n", SOL_DENS     );
-      Aux_Message( stdout, "   SOL_TSC       = %13.7e Gyr\n",        SOL_TSC      );
+      Aux_Message( stdout, "   SOL_DENS       = %13.7e Msun/kpc^3\n", SOL_DENS       );
+      Aux_Message( stdout, "   SOL_TSC        = %13.7e Gyr\n",        SOL_TSC        );
    }
 
 

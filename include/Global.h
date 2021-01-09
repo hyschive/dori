@@ -80,6 +80,7 @@ extern double SOL_RCORE;
 extern double SOL_CEN[3];
 extern int    SOL_CEN_MODE;
 extern double SOL_SC_CM_DT;
+extern bool   SOL_REMOVE_VCM;
 extern double SOL_RSC;
 extern double SOL_MSC;
 extern double SOL_OSC_AMP;
@@ -88,7 +89,8 @@ extern bool   SOL_REC_DIS;
 extern bool   SOL_REC_HLR;
 extern bool   SOL_EXT_SC;
 
-extern double SOL_SC_CM[3];
+extern double SOL_SC_RCM[3];
+extern double SOL_SC_VCM[3];
 extern double SOL_TSC;
 
 

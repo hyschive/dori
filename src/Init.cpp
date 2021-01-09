@@ -287,7 +287,13 @@ void Init_Particles( const double INIT_T )
       Ext_GetCM();
 
       if (  ( SOL_CEN_MODE == 2 && !RESTART )  ||  SOL_CEN_MODE == 3  )
-         for (int d=0; d<3; d++)    SOL_CEN[d] = SOL_SC_CM[d];
+      {
+         for (int d=0; d<3; d++)    SOL_CEN[d] = SOL_SC_RCM[d];
+
+         if ( SOL_REMOVE_VCM )
+         for (int i=0; i<N; i++)
+         for (int d=0; d<3; d++)    Vel[i][d] -= SOL_SC_VCM[d];
+      }
    }
 
 
@@ -517,6 +523,10 @@ void ReadParameter( double &INIT_T, double &END_T, long int &INIT_STEP, long int
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_SC_CM_DT,    string );
+
+   getline(&input_line, &len, File);
+   sscanf( input_line, "%d%s",   &temp_int,        string );
+   SOL_REMOVE_VCM = temp_int;
 
    getline(&input_line, &len, File);
    sscanf( input_line, "%lf%s",  &SOL_RSC,         string );
