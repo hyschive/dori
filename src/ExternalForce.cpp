@@ -141,6 +141,9 @@ void Ext_Init()
    if (  ( SOL_CEN_MODE == 2 || SOL_CEN_MODE == 3 )  &&  SOL_SC_CM_DT < 0.0  )
       Aux_Error( ERROR_INFO, "SOL_SC_CM_DT = %14.7e < 0.0 for SOL_CEN_MODE = 2/3 !!\n", SOL_SC_CM_DT );
 
+   if (  SOL_REMOVE_VCM  &&  ( SOL_CEN_MODE == 1 || SOL_SC_CM_DT < 0.0 )  )
+      Aux_Error( ERROR_INFO, "SOL_SC_CM_DT (%14.7e) < 0.0 or SOL_CEN_MODE = 1 for SOL_REMOVE_VCM !!\n", SOL_SC_CM_DT );
+
    if (  SOL_CEN_MODE == 1  ||  ( SOL_CEN_MODE == 2 && RESTART )  )
    {
       for (int d=0; d<3; d++)

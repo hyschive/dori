@@ -47,7 +47,7 @@
 -1.0e30  SOL_CEN_Z         # ...
 2        SOL_CEN_MODE      # how to set soliton center (1/2/3: input, initial star cluster CM, dynamical star cluster CM)
 1.0e-4   SOL_SC_CM_DT      # time interval for recomputing the star cluster CM (<0 -> disable)
-1        SOL_SC_REMOVE_CM  # remove the CM velocity of the star cluster (used together with SOL_CEN_MODE)
+1        SOL_REMOVE_VCM    # remove the CM velocity of the star cluster (used together with SOL_CEN_MODE)
 1.3e-2   SOL_RSC           # star cluster radius [kpc]
 2.0e3    SOL_MSC           # star cluster mass [Msun]
 0.3      SOL_OSC_AMP       # soliton oscillation amplitude (compared to SOL_DENS)
